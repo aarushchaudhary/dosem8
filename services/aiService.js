@@ -12,7 +12,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  */
 async function getAIResponse(question, context) {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         // Crafting a detailed prompt for better, safer responses.
         const prompt = `

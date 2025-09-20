@@ -1,0 +1,32 @@
+dosem8-portal/
+├── config/
+│   └── database.js
+├── controllers/
+│   ├── aiController.js
+│   ├── authController.js
+│   └── dashboardController.js
+├── middleware/
+│   └── authMiddleware.js
+├── models/
+│   ├── Pharmacy.js
+│   └── Regulation.js
+├── public/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── main.js
+│   ├── images/
+│   ├── dashboard.html
+│   ├── login.html
+│   ├── register.html
+│   └── regulations.html
+├── routes/
+│   ├── aiRoutes.js
+│   ├── authRoutes.js
+│   └── dashboardRoutes.js
+├── services/
+│   └── aiService.js
+├── .env
+├── .gitignore
+├── index.js
+└── package.json

@@ -1,0 +1,24 @@
+# Dependencies
+# This folder contains all installed npm packages and can be very large.
+# It can be recreated by running `npm install`.
+node_modules/
+
+# Environment Variables
+# This file contains sensitive information like API keys and database credentials.
+# It should never be shared or committed to version control.
+.env
+
+# Logs
+# Any log files generated during development or by npm.
+npm-debug.log*
+*.log
+
+# Operating System Files
+# These are system-specific files that don't belong in the repository.
+.DS_Store
+Thumbs.db
+
+# Editor/IDE Directories
+# Configuration files for code editors like VS Code.
+.vscode/
+.idea/

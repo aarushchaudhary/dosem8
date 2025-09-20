@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - DoseM8 Pharmacy Portal</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><span class="logo">DoseM8 Portal</span></li>
+            <li class="nav-links">
+                <a href="/dashboard.html">Dashboard</a>
+                <a href="/regulations.html">AI Assistant</a>
+                <a href="#" id="logout-btn">Logout</a>
+            </li>
+        </ul>
+    </nav>
+    <main class="container">
+        <h2>AI Regulatory Assistant</h2>
+        <p>Ask a question about Indian pharmacy regulations.</p>
+        <div id="chat-display">
+            <div class="chat-message ai-message">
+                Hello! How can I help you today?
+            </div>
+        </div>
+        <form id="ai-form">
+            <div class="form-group">
+                <input type="text" id="question" name="question" placeholder="Type your question here..." required>
+            </div>
+            <button type="submit" class="btn">Ask AI</button>
+        </form>
+    </main>
+    <script src="/js/main.js"></script>
+</body>
+</html>

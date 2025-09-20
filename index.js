@@ -1,7 +1,5 @@
-// index.js
-
 // 1. IMPORT DEPENDENCIES
-require('dotenv').config(); // Loads environment variables from .env file
+require('dotenv').config();
 const express = require('express');
 const connectDB = require('./config/database');
 
@@ -10,18 +8,20 @@ const app = express();
 connectDB();
 
 // 3. SET UP MIDDLEWARE
-// This allows your app to accept JSON in request bodies
 app.use(express.json()); 
-// This serves all static files (HTML, CSS, client-side JS) from the 'public' folder
 app.use(express.static('public'));
 
 // 4. DEFINE API ROUTES
-// All authentication-related routes will be prefixed with /api/auth
+
+// --- Pharmacy Portal Routes ---
 app.use('/api/auth', require('./routes/authRoutes'));
-// All dashboard-related routes will be prefixed with /api/dashboard
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
-// All AI-related routes will be prefixed with /api/ai
 app.use('/api/ai', require('./routes/aiRoutes'));
+
+// --- Patient App Routes (New) ---
+app.use('/api/user', require('./routes/userRoutes'));
+app.use('/api/medications', require('./routes/medicationRoutes'));
+app.use('/api/health-tips', require('./routes/healthTipRoutes'));
 
 
 // 5. START THE SERVER

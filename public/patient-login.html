@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Login - DoseM8</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container form-wrapper">
+        <h2>Patient Login</h2>
+        <p>Welcome back! Please log in to access your medication schedule and health tips.</p>
+        <form id="patient-login-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+        </form>
+        <p style="text-align: center; margin-top: 1rem;">
+            Don't have an account? <a href="/patient-register.html">Register here</a>
+        </p>
+    </div>
+    
+    <script src="/app/js/app_main.js"></script> 
+</body>
+</html>

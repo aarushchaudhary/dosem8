@@ -1,52 +1,114 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- App State & Configuration ---
-    const content = document.getElementById('app-content');
     const token = localStorage.getItem('token');
-    let isPremiumUser = false; // <-- State to track user's premium status
+    const currentPage = window.location.pathname;
 
-    // --- Authentication Check ---
-    // At the top of the file
-    if (!token) {
-        // NOTE: This should eventually point to a dedicated PATIENT login page.
-        window.location.href = '/login.html'; // <-- Update this line
-        return;
+    // --- Page Initializer ---
+    // This is the main entry point. It decides what to do based on the current page.
+    const initializePage = async () => {
+        // Define which pages are public (don't require a login token)
+        const publicPages = ['/patient-login.html', '/patient-register.html'];
+
+        // If we are on a protected page and there's no token, redirect to the login page.
+        if (!token && !publicPages.includes(currentPage)) {
+            window.location.href = '/patient-login.html';
+            return;
+        }
+
+        // Use a router to handle different pages
+        switch (currentPage) {
+            case '/patient-login.html':
+                document.getElementById('patient-login-form').addEventListener('submit', handlePatientLogin);
+                break;
+            case '/patient-register.html':
+                document.getElementById('patient-register-form').addEventListener('submit', handlePatientRegister);
+                break;
+            case '/app/index.html':
+                // This is the main Single-Page Application
+                initializeApp();
+                break;
+        }
+    };
+
+
+    // --- Patient Authentication Handlers (for patient-login.html and patient-register.html) ---
+    async function handlePatientRegister(e) {
+        e.preventDefault();
+        const registerForm = document.getElementById('patient-register-form');
+        const formData = new FormData(registerForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/api/patient/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Registration successful! Please log in.');
+                window.location.href = '/patient-login.html';
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            alert('An error occurred. Please try again.');
+        }
     }
 
-    // --- Main Initializer ---
+    async function handlePatientLogin(e) {
+        e.preventDefault();
+        const loginForm = document.getElementById('patient-login-form');
+        const formData = new FormData(loginForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/api/patient/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            const result = await response.json();
+            if (result.success) {
+                localStorage.setItem('token', result.token);
+                window.location.href = '/app/index.html'; // Redirect to the main app
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            alert('An error occurred. Please try again.');
+        }
+    }
+
+
+    // --- Main App Logic (for when the user is inside /app/index.html) ---
+    let isPremiumUser = false;
+
     const initializeApp = async () => {
-        // Fetch user profile to check subscription status first
         const userRes = await fetchWithAuth('/api/user/profile');
         if (userRes.success && userRes.data.subscription.plan === 'premium') {
             isPremiumUser = true;
         }
-        
-        // Now that we know the user's status, run the router
         router();
-        
-        // Listen for URL hash changes to navigate
         window.addEventListener('hashchange', router);
     };
 
-    // --- Router ---
     const router = async () => {
         const path = window.location.hash || '#home';
         const route = routes[path];
-
         if (route) {
-            // If the route is premium-only and the user is not premium, redirect
             if (route.premium && !isPremiumUser) {
                 alert("This feature is for premium members only.");
-                window.location.hash = '#home'; // Redirect to home
+                window.location.hash = '#home';
                 return;
             }
+            const content = document.getElementById('app-content');
             content.innerHTML = await fetch(route.template).then((res) => res.text());
             route.init();
-        } else {
-            content.innerHTML = '<h2>Page Not Found</h2>';
         }
     };
-
-    // --- Page-Specific Logic (Controllers) ---
+    
+    // --- Page-Specific Logic ---
     const renderHomePage = async () => {
         const userRes = await fetchWithAuth('/api/user/profile');
         if (userRes.success) {
@@ -57,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Conditionally show the Health Report section
         const reportsSection = document.getElementById('reports-section');
         if (isPremiumUser) {
             reportsSection.style.display = 'block';
@@ -199,6 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Initial Load ---
-    initializeApp();
+    // --- Start the logic for the current page ---
+    initializePage();
 });

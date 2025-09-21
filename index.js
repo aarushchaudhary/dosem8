@@ -8,20 +8,28 @@ const app = express();
 connectDB();
 
 // 3. SET UP MIDDLEWARE
+// This allows your app to accept JSON in request bodies
 app.use(express.json()); 
+// This serves all static files (HTML, CSS, client-side JS) from the 'public' folder
 app.use(express.static('public'));
 
 // 4. DEFINE API ROUTES
+// ===================================
+// --- PHARMACY PERSONNEL PORTAL API ROUTES ---
+// ===================================
+app.use('/api/auth', require('./routes/authRoutes')); // Handles pharmacy login/registration
+app.use('/api/dashboard', require('./routes/dashboardRoutes')); // Pharmacy dashboard data
+app.use('/api/ai', require('./routes/aiRoutes')); // AI Regulatory Assistant
+app.use('/api/advertisements', require('./routes/advertisementRoutes')); // Ad management
+app.use('/api/consultations', require('./routes/consultationRoutes')); // Patient consultations
+app.use('/api/notifications', require('./routes/notificationRoutes')); // Pharmacy notifications
 
-// --- Pharmacy Portal Routes ---
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/dashboard', require('./routes/dashboardRoutes'));
-app.use('/api/ai', require('./routes/aiRoutes'));
-
-// --- Patient App Routes (New) ---
-app.use('/api/user', require('./routes/userRoutes'));
-app.use('/api/medications', require('./routes/medicationRoutes'));
-app.use('/api/health-tips', require('./routes/healthTipRoutes'));
+// ===================================
+// --- PATIENT-FACING APP API ROUTES ---
+// ===================================
+app.use('/api/user', require('./routes/userRoutes')); // Handles patient profile
+app.use('/api/medications', require('./routes/medicationRoutes')); // Medication reminders
+app.use('/api/health-tips', require('./routes/healthTipRoutes')); // Health tips content
 
 
 // 5. START THE SERVER

@@ -2,28 +2,60 @@ dosem8-portal/
 ├── config/
 │   └── database.js
 ├── controllers/
+│   ├── advertisementController.js
 │   ├── aiController.js
 │   ├── authController.js
-│   └── dashboardController.js
+│   ├── consultationController.js
+│   ├── dashboardController.js
+│   ├── healthTipController.js
+│   ├── medicationController.js
+│   ├── notificationController.js
+│   └── userController.js
 ├── middleware/
 │   └── authMiddleware.js
 ├── models/
+│   ├── Advertisement.js
+│   ├── Consultation.js
+│   ├── HealthTip.js
+│   ├── Medication.js
+│   ├── Notification.js
 │   ├── Pharmacy.js
-│   └── Regulation.js
+│   ├── Regulation.js
+│   └── User.js
 ├── public/
-│   ├── css/
+│   ├── app/  (Patient App Frontend)
+│   │   ├── css/
+│   │   │   └── app_style.css
+│   │   ├── js/
+│   │   │   └── app_main.js
+│   │   ├── partials/
+│   │   │   ├── health_tips.html
+│   │   │   ├── home.html
+│   │   │   └── reminders.html
+│   │   └── index.html
+│   ├── css/  (Pharmacy Portal Frontend)
 │   │   └── style.css
-│   ├── js/
+│   ├── js/   (Pharmacy Portal Frontend)
 │   │   └── main.js
-│   ├── images/
+│   ├── partials/ (Pharmacy Portal Frontend)
+│   │   └── pharmacy_nav.html
+│   ├── advertisements.html
+│   ├── consultations.html
 │   ├── dashboard.html
+│   ├── index.html
 │   ├── login.html
 │   ├── register.html
 │   └── regulations.html
 ├── routes/
+│   ├── advertisementRoutes.js
 │   ├── aiRoutes.js
 │   ├── authRoutes.js
-│   └── dashboardRoutes.js
+│   ├── consultationRoutes.js
+│   ├── dashboardRoutes.js
+│   ├── healthTipRoutes.js
+│   ├── medicationRoutes.js
+│   ├── notificationRoutes.js
+│   └── userRoutes.js
 ├── services/
 │   └── aiService.js
 ├── .env

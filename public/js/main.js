@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const currentPage = window.location.pathname;
 
-    // --- Page Protection ---
+    // --- Page Protection & Navigation Loading ---
     // If user is not on a public page and doesn't have a token, redirect to login
     if (!token && currentPage !== '/login.html' && currentPage !== '/register.html') {
         window.location.href = '/login.html';
@@ -15,34 +15,73 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-
-    // --- Element Handlers ---
-    const registerForm = document.getElementById('register-form');
-    const loginForm = document.getElementById('login-form');
-    const logoutBtn = document.getElementById('logout-btn');
-    const dashboardContent = document.getElementById('dashboard-content');
-    const aiForm = document.getElementById('ai-form');
-
-    // --- Event Listeners ---
-    if (registerForm) {
-        registerForm.addEventListener('submit', handleRegister);
-    }
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-    if (dashboardContent) {
-        fetchDashboardData();
-    }
-    if (aiForm) {
-        aiForm.addEventListener('submit', handleAIQuery);
+    // Load the shared navigation on all protected pages
+    if (currentPage !== '/login.html' && currentPage !== '/register.html') {
+        loadNavigation();
     }
 
-    // --- Handler Functions ---
+    // --- Page Router ---
+    // This switch statement runs the correct functions based on the current HTML page
+    switch (currentPage) {
+        case '/dashboard.html':
+            fetchDashboardData();
+            break;
+        case '/regulations.html':
+            setupAIForm();
+            break;
+        case '/advertisements.html':
+            loadAdvertisements();
+            setupAdForm();
+            break;
+        case '/consultations.html':
+            loadConsultations();
+            break;
+        case '/login.html':
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            break;
+        case '/register.html':
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+            break;
+    }
+
+    // --- Helper Functions ---
+    async function fetchWithAuth(url, options = {}) {
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-auth-token': token
+            }
+        };
+        const mergedOptions = { ...defaultOptions, ...options };
+        mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
+        
+        try {
+            const response = await fetch(url, mergedOptions);
+            return await response.json();
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            return { success: false, message: 'Network error or server is down.' };
+        }
+    }
+
+    async function loadNavigation() {
+        const navPlaceholder = document.getElementById('nav-placeholder');
+        if (navPlaceholder) {
+            try {
+                const response = await fetch('/partials/pharmacy_nav.html');
+                navPlaceholder.innerHTML = await response.text();
+                // Attach logout event listener after nav is loaded
+                document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            } catch (error) {
+                console.error("Could not load navigation:", error);
+            }
+        }
+    }
+    
+    // --- Authentication Handlers ---
     async function handleRegister(e) {
         e.preventDefault();
+        const registerForm = document.getElementById('register-form');
         const formData = new FormData(registerForm);
         const data = Object.fromEntries(formData.entries());
 
@@ -66,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleLogin(e) {
         e.preventDefault();
+        const loginForm = document.getElementById('login-form');
         const formData = new FormData(loginForm);
         const data = Object.fromEntries(formData.entries());
 
@@ -92,63 +132,46 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/login.html';
     }
 
+    // --- Page Initializers & Handlers ---
     async function fetchDashboardData() {
-        try {
-            const response = await fetch('/api/dashboard', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': token,
-                },
-            });
-            const result = await response.json();
-            if (result.success) {
-                const { pharmacyName, email, createdAt } = result.data;
-                dashboardContent.innerHTML = `
-                    <h3>Welcome, ${pharmacyName}!</h3>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Member Since:</strong> ${new Date(createdAt).toLocaleDateString()}</p>
-                `;
-            } else {
-                // If token is invalid/expired, log out user
-                handleLogout();
-            }
-        } catch (error) {
-            dashboardContent.innerHTML = '<p>Could not load data.</p>';
+        const dashboardContent = document.getElementById('dashboard-content');
+        const result = await fetchWithAuth('/api/dashboard');
+        
+        if (result.success) {
+            const { pharmacyName, email, createdAt } = result.data;
+            dashboardContent.innerHTML = `
+                <h3>Welcome, ${pharmacyName}!</h3>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Member Since:</strong> ${new Date(createdAt).toLocaleDateString()}</p>
+            `;
+        } else {
+            handleLogout();
         }
     }
 
+    function setupAIForm() {
+        const aiForm = document.getElementById('ai-form');
+        aiForm.addEventListener('submit', handleAIQuery);
+    }
+    
     async function handleAIQuery(e) {
         e.preventDefault();
         const questionInput = document.getElementById('question');
         const question = questionInput.value;
-        const chatDisplay = document.getElementById('chat-display');
-
         if (!question) return;
 
-        // Display user's question
         appendMessage(question, 'user-message');
         questionInput.value = '';
 
-        try {
-            const response = await fetch('/api/ai/ask', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': token,
-                },
-                body: JSON.stringify({ question }),
-            });
-
-            const result = await response.json();
-            
-            if (result.success) {
-                appendMessage(result.answer, 'ai-message');
-            } else {
-                appendMessage('Sorry, there was an error.', 'ai-message');
-            }
-        } catch (error) {
-            appendMessage('Could not connect to the AI service.', 'ai-message');
+        const result = await fetchWithAuth('/api/ai/ask', {
+            method: 'POST',
+            body: JSON.stringify({ question }),
+        });
+        
+        if (result.success) {
+            appendMessage(result.answer, 'ai-message');
+        } else {
+            appendMessage('Sorry, there was an error processing your request.', 'ai-message');
         }
     }
     
@@ -158,6 +181,45 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.className = `chat-message ${className}`;
         messageDiv.textContent = text;
         chatDisplay.appendChild(messageDiv);
-        chatDisplay.scrollTop = chatDisplay.scrollHeight; // Auto-scroll to bottom
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function loadAdvertisements() {
+        const listEl = document.getElementById('campaign-list');
+        const result = await fetchWithAuth('/api/advertisements');
+        if (result.success && result.data.length > 0) {
+            listEl.innerHTML = result.data.map(ad => `
+                <div class="list-item">
+                    <h4>${ad.campaignTitle}</h4>
+                    <p>Status: <strong>${ad.status}</strong> | Clicks: ${ad.performance.clicks || 0}</p>
+                </div>
+            `).join('');
+        } else {
+            listEl.innerHTML = '<p>You have not created any campaigns yet.</p>';
+        }
+    }
+    
+    function setupAdForm() {
+        document.getElementById('create-ad-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // In a real app, you would collect form data and send it
+            alert('Ad creation and payment gateway integration would happen here!');
+        });
+    }
+
+    async function loadConsultations() {
+        const listEl = document.getElementById('consultation-list');
+        const result = await fetchWithAuth('/api/consultations');
+        if (result.success && result.data.length > 0) {
+            listEl.innerHTML = result.data.map(con => `
+                <div class="list-item">
+                    <h4>New message from: ${con.patient.name}</h4>
+                    <p>Question: "${con.initialQuestion}"</p>
+                    <button class="btn-secondary">View & Reply</button>
+                </div>
+            `).join('');
+        } else {
+            listEl.innerHTML = '<p>You have no open consultations.</p>';
+        }
     }
 });

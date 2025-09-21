@@ -19,7 +19,6 @@ app.use(express.static('public'));
 // ===================================
 app.use('/api/auth', require('./routes/authRoutes')); // Handles pharmacy login/registration
 app.use('/api/dashboard', require('./routes/dashboardRoutes')); // Pharmacy dashboard data
-app.use('/api/ai', require('./routes/aiRoutes')); // AI Regulatory Assistant
 app.use('/api/advertisements', require('./routes/advertisementRoutes')); // Ad management
 app.use('/api/consultations', require('./routes/consultationRoutes')); // Patient consultations
 app.use('/api/notifications', require('./routes/notificationRoutes')); // Pharmacy notifications
@@ -30,6 +29,8 @@ app.use('/api/notifications', require('./routes/notificationRoutes')); // Pharma
 app.use('/api/user', require('./routes/userRoutes')); // Handles patient profile
 app.use('/api/medications', require('./routes/medicationRoutes')); // Medication reminders
 app.use('/api/health-tips', require('./routes/healthTipRoutes')); // Health tips content
+app.use('/api/reports', require('./routes/reportRoutes')); // Premium health reports
+app.use('/api/ai', require('./routes/aiRoutes')); // Handles standard & premium AI for patients
 
 
 // 5. START THE SERVER

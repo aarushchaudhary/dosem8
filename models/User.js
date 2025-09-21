@@ -18,8 +18,6 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: [true, 'Password is required']
-        // Remember to hash this password with bcryptjs in your auth controller
-        // before saving it to the database.
     },
     profileInfo: {
         dateOfBirth: { type: Date },
@@ -34,6 +32,18 @@ const userSchema = new mongoose.Schema({
         notificationsEnabled: {
             type: Boolean,
             default: true
+        }
+    },
+    // --- NEW SECTION FOR PREMIUM FEATURES ---
+    subscription: {
+        plan: {
+            type: String,
+            enum: ['free', 'premium'],
+            default: 'free'
+        },
+        expires: {
+            type: Date,
+            default: null
         }
     },
     createdAt: {

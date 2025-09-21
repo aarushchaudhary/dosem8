@@ -126,10 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('An error occurred. Please try again.');
         }
     }
-
-    function handleLogout() {
+    // In handleLogout function
+    function handleLogout(e) {
+        e.preventDefault();
         localStorage.removeItem('token');
-        window.location.href = '/login.html';
+        window.location.href = '/login.html'; // <-- Update this line
     }
 
     // --- Page Initializers & Handlers ---

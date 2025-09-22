@@ -201,6 +201,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
+
+    const renderAskAIPage = () => {
+        const interactionForm = document.getElementById('interaction-form');
+        interactionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const drugsInput = document.getElementById('drugs');
+            const drugs = drugsInput.value;
+            if (!drugs) return;
+
+            const result = await fetchWithAuth('/api/ai/check-interactions', {
+                method: 'POST',
+                body: JSON.stringify({ drugs }),
+            });
+
+            const responseEl = document.getElementById('ai-response');
+            if (result.success) {
+                responseEl.innerHTML = `<p>${result.answer}</p>`;
+            } else {
+                responseEl.innerHTML = `<p>Error: ${result.message}</p>`;
+            }
+        });
+    };
     
     const renderHealthReportsPage = async () => {
         const reportContent = document.getElementById('report-content');
@@ -240,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '#reminders': { template: '/app/partials/reminders.html', init: renderRemindersPage },
         '#consult': { template: '/app/partials/consult.html', init: renderConsultPage },
         '#tips': { template: '/app/partials/health_tips.html', init: renderHealthTipsPage },
+        '#ask_ai': { template: '/app/partials/ask_ai.html', init: renderAskAIPage },
         '#reports': { template: '/app/partials/reports.html', init: renderHealthReportsPage, premium: true }
     };
 

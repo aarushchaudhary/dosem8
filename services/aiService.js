@@ -14,7 +14,7 @@ async function getAIResponse(question, context) {
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-        // Crafting a detailed prompt for better, safer responses.
+        // The prompt is now correctly constructed here
         const prompt = `
             You are an expert assistant for Indian pharmacy regulations. Your role is to answer questions based ONLY on the provided regulatory context. Do not use external knowledge.
 
@@ -36,12 +36,13 @@ async function getAIResponse(question, context) {
         return text;
     } catch (error) {
         console.error('Error contacting AI service:', error);
-        return 'Sorry, I am unable to process your request at the moment.';
+        // FIXED: Throw the error so the controller can catch it
+        throw new Error('Could not get a response from the AI service.');
     }
 }
 
 /**
- * --- NEW: Gets a drug interaction response from the AI ---
+ * Gets a brief drug interaction response from the AI
  * @param {string} drugs A string containing a list of drugs, foods, or conditions.
  * @returns {Promise<string>} The AI-generated interaction analysis.
  */
@@ -50,15 +51,19 @@ async function getInteractionResponse(drugs) {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
         const prompt = `
-            You are an expert pharmacological assistant. Your role is to identify and explain potential interactions between a list of drugs, foods, and/or medical conditions.
+            You are an expert pharmacological assistant. Analyze the following items for interactions and answer ONLY the three questions below.
 
-            **Please analyze the following items for potential interactions:**
+            **Items to Analyze:**
             ---
             ${drugs}
             ---
 
-            Provide a clear, concise, and easy-to-understand summary of any potential interactions. If there are no significant interactions, please state that.
-            **Disclaimer:** This is for informational purposes only and does not constitute medical advice.
+            **1. Safety:** Is this combination safe or should it be avoided?
+            **2. Potential Side Effects:** What are the key side effects?
+            **3. Prevention:** How can the interaction be prevented or managed?
+
+            Keep the entire response very brief and to the point.
+            **Disclaimer:** This is for informational purposes only and not medical advice.
         `;
 
         const result = await model.generateContent(prompt);
@@ -68,7 +73,8 @@ async function getInteractionResponse(drugs) {
         return text;
     } catch (error) {
         console.error('Error contacting AI service:', error);
-        return 'Sorry, I am unable to process your request at the moment.';
+        // FIXED: Throw the error so the controller can catch it
+        throw new Error('Could not get a response from the AI service for interactions.');
     }
 }
 

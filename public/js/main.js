@@ -3,31 +3,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname;
 
     // --- Page Protection & Navigation Loading ---
-    // If user is not on a public page and doesn't have a token, redirect to login
     if (!token && currentPage !== '/login.html' && currentPage !== '/register.html') {
         window.location.href = '/login.html';
         return;
     }
     
-    // If user is on a public page but has a token, redirect to dashboard
     if (token && (currentPage === '/login.html' || currentPage === '/register.html')) {
         window.location.href = '/dashboard.html';
         return;
     }
 
-    // Load the shared navigation on all protected pages
     if (currentPage !== '/login.html' && currentPage !== '/register.html') {
         loadNavigation();
     }
 
     // --- Page Router ---
-    // This switch statement runs the correct functions based on the current HTML page
     switch (currentPage) {
         case '/dashboard.html':
             fetchDashboardData();
             break;
         case '/regulations.html':
             setupAIForm();
+            setupInteractionForm(); // <-- Add this line
             break;
         case '/advertisements.html':
             loadAdvertisements();
@@ -70,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const response = await fetch('/partials/pharmacy_nav.html');
                 navPlaceholder.innerHTML = await response.text();
-                // Attach logout event listener after nav is loaded
                 document.getElementById('logout-btn').addEventListener('click', handleLogout);
             } catch (error) {
                 console.error("Could not load navigation:", error);
@@ -126,11 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('An error occurred. Please try again.');
         }
     }
-    // In handleLogout function
+
     function handleLogout(e) {
         e.preventDefault();
         localStorage.removeItem('token');
-        window.location.href = '/login.html'; // <-- Update this line
+        window.location.href = '/login.html';
     }
 
     // --- Page Initializers & Handlers ---
@@ -154,6 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const aiForm = document.getElementById('ai-form');
         aiForm.addEventListener('submit', handleAIQuery);
     }
+
+    // --- NEW: Function to set up the interaction form ---
+    function setupInteractionForm() {
+        const interactionForm = document.getElementById('interaction-form');
+        interactionForm.addEventListener('submit', handleInteractionQuery);
+    }
     
     async function handleAIQuery(e) {
         e.preventDefault();
@@ -173,6 +175,28 @@ document.addEventListener('DOMContentLoaded', () => {
             appendMessage(result.answer, 'ai-message');
         } else {
             appendMessage('Sorry, there was an error processing your request.', 'ai-message');
+        }
+    }
+
+    // --- NEW: Function to handle the interaction query ---
+    async function handleInteractionQuery(e) {
+        e.preventDefault();
+        const drugsInput = document.getElementById('drugs');
+        const drugs = drugsInput.value;
+        if (!drugs) return;
+
+        appendMessage(`Checking interactions for: ${drugs}`, 'user-message');
+        drugsInput.value = '';
+
+        const result = await fetchWithAuth('/api/ai/check-interactions', {
+            method: 'POST',
+            body: JSON.stringify({ drugs }),
+        });
+        
+        if (result.success) {
+            appendMessage(result.answer, 'ai-message');
+        } else {
+            appendMessage('Sorry, there was an error checking for interactions.', 'ai-message');
         }
     }
     
@@ -203,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupAdForm() {
         document.getElementById('create-ad-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // In a real app, you would collect form data and send it
             alert('Ad creation and payment gateway integration would happen here!');
         });
     }

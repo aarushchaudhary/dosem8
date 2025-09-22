@@ -1,7 +1,7 @@
 // routes/aiRoutes.js
 const express = require('express');
 const router = express.Router();
-const { askAI, askAIEnhanced } = require('../controllers/aiController'); // <-- Import the new function
+const { askAI, askAIEnhanced, checkInteractions } = require('../controllers/aiController'); // <-- Import the new function
 const auth = require('../middleware/authMiddleware');
 const premiumAuth = require('../middleware/premiumAuth'); // <-- Import the new premium middleware
 
@@ -11,6 +11,11 @@ const premiumAuth = require('../middleware/premiumAuth'); // <-- Import the new 
 // @access  Private (for all logged-in users)
 router.post('/ask', auth, askAI);
 
+// --- NEW: Interaction Checker Route ---
+// @route   POST /api/ai/check-interactions
+// @desc    Submit a list of drugs/items to check for interactions
+// @access  Private (for all logged-in users)
+router.post('/check-interactions', auth, checkInteractions);
 
 // --- Premium Route ---
 // @route   POST /api/ai/ask-enhanced

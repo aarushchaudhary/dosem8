@@ -1,7 +1,7 @@
 // controllers/aiController.js
 const Regulation = require('../models/Regulation');
 const Medication = require('../models/Medication'); // <-- NEW: Import Medication model
-const { getAIResponse } = require('../services/aiService');
+const { getAIResponse, getInteractionResponse } = require('../services/aiService'); // <-- UPDATED: Import the new function
 
 // @desc    Get a standard answer from the AI assistant
 // @route   POST /api/ai/ask
@@ -39,6 +39,27 @@ exports.askAI = async (req, res) => {
 
         res.status(200).json({ success: true, answer: answer });
 
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ success: false, message: 'Error getting response from AI service' });
+    }
+};
+
+// --- NEW: Controller for checking drug interactions ---
+// @desc    Check for interactions between drugs/food/conditions
+// @route   POST /api/ai/check-interactions
+// @access  Private
+exports.checkInteractions = async (req, res) => {
+    const { drugs } = req.body;
+
+    if (!drugs) {
+        return res.status(400).json({ success: false, message: 'A list of drugs is required' });
+    }
+
+    try {
+        // Call the new service function to get interaction analysis
+        const answer = await getInteractionResponse(drugs);
+        res.status(200).json({ success: true, answer: answer });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ success: false, message: 'Error getting response from AI service' });

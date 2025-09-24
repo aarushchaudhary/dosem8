@@ -161,10 +161,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const userRes = await fetchWithAuth('/api/user/profile');
         if (userRes.success) {
             const greetingEl = document.getElementById('greeting-name');
-            greetingEl.textContent = userRes.data.name;
-            if (isPremiumUser) {
-                greetingEl.innerHTML += ' <span class="premium-badge">★ Premium</span>';
-            }
+            
+            // Get current date and time
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
+            });
+            const date = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            console.log('Patient dashboard data loaded:', { user: userRes.data, time, date });
+            
+            // Enhanced greeting with user info, date and time
+            greetingEl.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <h3>Welcome, ${userRes.data.name}!</h3>
+                    ${isPremiumUser ? '<span class="premium-badge">★ Premium</span>' : ''}
+                </div>
+                <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;">
+                    <p><strong>📅 Today's Date:</strong> ${date}</p>
+                    <p><strong>🕐 Current Time:</strong> ${time}</p>
+                    <p><strong>👤 Member Since:</strong> ${new Date(userRes.data.createdAt).toLocaleDateString()}</p>
+                </div>
+            `;
         }
 
         // --- 2. Render Medicine Reminders ---

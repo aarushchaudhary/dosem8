@@ -190,10 +190,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const { pharmacy, unreadConsultations } = result.data;
 
             // Render Welcome Card
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
+            });
+            const date = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            console.log('Dashboard data loaded successfully:', { pharmacy, time, date });
+
             welcomeCard.innerHTML = `
                 <h3>Welcome, ${pharmacy.pharmacyName}!</h3>
                 <p><strong>Email:</strong> ${pharmacy.email}</p>
                 <p><strong>Member Since:</strong> ${new Date(pharmacy.createdAt).toLocaleDateString()}</p>
+                <hr style="margin: 15px 0; border: none; height: 1px; background-color: #e9ecef;">
+                <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 15px;">
+                    <p><strong>🕐 Current Time:</strong> ${time}</p>
+                    <p><strong>📅 Today's Date:</strong> ${date}</p>
+                </div>
             `;
 
             // Render Notifications Card
@@ -221,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } else {
+            console.error('Dashboard API call failed:', result);
             welcomeCard.innerHTML = '<p>Could not load your data.</p>';
             notificationsContainer.innerHTML = '<p>Could not load notifications.</p>';
         }

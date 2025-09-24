@@ -4,30 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Registration - DoseM8</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/app/css/app_style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #app-content {
+            width: 100%;
+            max-width: 400px; /* Prevents the form from being too wide */
+            padding-bottom: 1.5rem; /* Reset padding for centering */
+        }
+    </style>
 </head>
 <body>
-    <div class="container form-wrapper">
+    <main id="app-content">
         <h2>Create Your Patient Account</h2>
-        <form id="patient-register-form">
-            <div class="form-group">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn">Create Account</button>
+        <form id="patient-register-form" class="simple-form">
+            <input type="text" id="name" name="name" placeholder="Full Name" required>
+            <input type="email" id="email" name="email" placeholder="Email" required>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <button type="submit">Create Account</button>
         </form>
         <p style="text-align: center; margin-top: 1rem;">
             Already have an account? <a href="/patient-login.html">Login here</a>
         </p>
-    </div>
+    </main>
     
     <script src="/app/js/app_main.js"></script>
 </body>

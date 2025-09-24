@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         router();
         window.addEventListener('hashchange', router);
+        attachLogoutHandler(); // Attach the logout handler
     };
 
     const router = async () => {
@@ -107,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             route.init();
         }
     };
-    
+
     // --- Page-Specific Logic ---
     const renderHomePage = async () => {
         const userRes = await fetchWithAuth('/api/user/profile');
@@ -118,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 greetingEl.innerHTML += ' <span class="premium-badge">★ Premium</span>';
             }
         }
-        
+
         const reportsSection = document.getElementById('reports-section');
         if (isPremiumUser) {
             reportsSection.style.display = 'block';
@@ -136,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderRemindersPage = async () => {
         const medList = document.getElementById('medication-list');
         const addMedForm = document.getElementById('add-med-form');
-        
+
         const medRes = await fetchWithAuth('/api/medications');
         if (medRes.success && medRes.data.length > 0) {
             medList.innerHTML = medRes.data.map(med => `
@@ -161,21 +162,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     times: formData.get('times').split(',').map(t => t.trim())
                 }
             };
-            
+
             const result = await fetchWithAuth('/api/medications', {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
 
-            if (result.success) { router(); } 
+            if (result.success) { router(); }
             else { alert('Failed to add medication.'); }
         });
     };
-    
+
     const renderConsultPage = async () => {
         const consultForm = document.getElementById('consult-form');
         const consultTitle = document.getElementById('consult-title');
-        
+
         if(isPremiumUser) {
             consultTitle.textContent = "Ask AI Enhanced";
         }
@@ -187,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!question) return;
 
             const endpoint = isPremiumUser ? '/api/ai/ask-enhanced' : '/api/ai/ask';
-            
+
             const result = await fetchWithAuth(endpoint, {
                 method: 'POST',
                 body: JSON.stringify({ question })
@@ -223,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
-    
+
     const renderHealthReportsPage = async () => {
         const reportContent = document.getElementById('report-content');
         const result = await fetchWithAuth('/api/reports');
@@ -280,6 +281,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('API Fetch Error:', error);
             return { success: false, message: 'Fetch error' };
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        window.location.href = '/patient-login.html';
+    };
+
+    const attachLogoutHandler = () => {
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleLogout();
+            });
         }
     };
 

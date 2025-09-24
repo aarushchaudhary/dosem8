@@ -1,6 +1,6 @@
-# DoseM8
+# DOSEM8
 
-DoseM8 is a comprehensive health and medication management solution with two main components: a patient-facing application and a pharmacy portal.
+DOSEM8 is a comprehensive health and medication management solution with two main components: a patient-facing application and a pharmacy portal.
 
 ## Description
 

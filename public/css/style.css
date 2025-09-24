@@ -181,3 +181,12 @@ nav a:hover {
 .portal-card h3 {
     color: var(--primary-color);
 }
+
+/* ... existing styles ... */
+
+.tip-author {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--app-muted-text-color);
+    margin-bottom: 0.5rem;
+}

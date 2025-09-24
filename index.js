@@ -22,6 +22,15 @@ app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/advertisements', require('./routes/advertisementRoutes'));
 app.use('/api/consultations', require('./routes/consultationRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+// ... existing app.use statements
+app.use('/api/auth', require('./routes/authRoutes')); // Handles pharmacy login/registration
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/advertisements', require('./routes/advertisementRoutes'));
+app.use('/api/consultations', require('./routes/consultationRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/pharmacy/health-tips', require('./routes/pharmacyHealthTipRoutes')); // <-- ADD THIS LINE
+
+// ... rest of the file
 
 // ===================================
 // --- PATIENT-FACING APP API ROUTES ---

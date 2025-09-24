@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
         case '/regulations.html':
             setupAIForm();
-            setupInteractionForm(); // <-- Add this line
+            setupInteractionForm();
             break;
         case '/advertisements.html':
             loadAdvertisements();
@@ -32,6 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
         case '/consultations.html':
             loadConsultations();
+            break;
+        case '/health_tips.html': // <-- ADDED THIS CASE
+            loadPharmacyHealthTips();
+            setupTipForm();
             break;
         case '/login.html':
             document.getElementById('login-form').addEventListener('submit', handleLogin);
@@ -151,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         aiForm.addEventListener('submit', handleAIQuery);
     }
 
-    // --- NEW: Function to set up the interaction form ---
     function setupInteractionForm() {
         const interactionForm = document.getElementById('interaction-form');
         interactionForm.addEventListener('submit', handleInteractionQuery);
@@ -178,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- NEW: Function to handle the interaction query ---
     async function handleInteractionQuery(e) {
         e.preventDefault();
         const drugsInput = document.getElementById('drugs');
@@ -244,6 +246,66 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('');
         } else {
             listEl.innerHTML = '<p>You have no open consultations.</p>';
+        }
+    }
+
+    // --- Health Tips (Pharmacy) ---
+    async function loadPharmacyHealthTips() {
+        const listEl = document.getElementById('tips-list');
+        listEl.innerHTML = '<p>Loading your health tips...</p>';
+        const result = await fetchWithAuth('/api/pharmacy/health-tips');
+
+        if (result.success && result.data.length > 0) {
+            listEl.innerHTML = result.data.map(tip => `
+                <div class="list-item">
+                    <h4>${tip.title}</h4>
+                    <p>${tip.content}</p>
+                    <button class="btn-secondary btn-delete-tip" data-id="${tip._id}">Delete</button>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.btn-delete-tip').forEach(button => {
+                button.addEventListener('click', handleDeleteTip);
+            });
+
+        } else {
+            listEl.innerHTML = '<p>You have not published any health tips yet.</p>';
+        }
+    }
+
+    function setupTipForm() {
+        const form = document.getElementById('add-tip-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            const result = await fetchWithAuth('/api/pharmacy/health-tips', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+
+            if (result.success) {
+                form.reset();
+                loadPharmacyHealthTips();
+            } else {
+                alert('Error creating tip: ' + result.message);
+            }
+        });
+    }
+
+    async function handleDeleteTip(e) {
+        const tipId = e.target.dataset.id;
+        if (confirm('Are you sure you want to delete this tip?')) {
+            const result = await fetchWithAuth(`/api/pharmacy/health-tips/${tipId}`, {
+                method: 'DELETE'
+            });
+
+            if (result.success) {
+                loadPharmacyHealthTips();
+            } else {
+                alert('Error deleting tip: ' + result.message);
+            }
         }
     }
 });

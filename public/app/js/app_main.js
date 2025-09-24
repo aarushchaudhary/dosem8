@@ -250,8 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tipsRes.success) {
             tipsContainer.innerHTML = tipsRes.data.map(tip => `
                 <div class="tip-card">
+                    <p class="tip-author">From: ${tip.pharmacy.pharmacyName}</p>
                     <h3>${tip.title}</h3>
-                    <p>${tip.content.substring(0, 100)}...</p>
+                    <p>${tip.content}</p>
                 </div>
             `).join('');
         }

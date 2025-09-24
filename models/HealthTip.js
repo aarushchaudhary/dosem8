@@ -2,11 +2,15 @@
 const mongoose = require('mongoose');
 
 const healthTipSchema = new mongoose.Schema({
+    pharmacy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Pharmacy',
+        required: true
+    },
     title: {
         type: String,
         required: [true, 'Title is required'],
-        trim: true,
-        unique: true
+        trim: true
     },
     content: {
         type: String,
@@ -15,10 +19,6 @@ const healthTipSchema = new mongoose.Schema({
     category: {
         type: String,
         required: [true, 'Category is required'],
-        trim: true
-    },
-    imageUrl: {
-        type: String,
         trim: true
     },
     createdAt: {

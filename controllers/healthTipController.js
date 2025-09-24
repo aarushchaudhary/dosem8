@@ -20,13 +20,16 @@ exports.getHealthTips = async (req, res) => {
             query = HealthTip.find().sort({ createdAt: -1 });
         }
 
-        const tips = await query;
+        // Populate the pharmacy field with the pharmacyName
+        const tips = await query.populate('pharmacy', 'pharmacyName');
 
         res.status(200).json({ success: true, count: tips.length, data: tips });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
+
+// ... (rest of the file remains the same)
 
 // --- Admin Functions (for future implementation) ---
 

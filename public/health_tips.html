@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tips - DoseM8 Pharmacy Portal</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+
+    <main class="container">
+        <div class="page-header">
+            <h2>Manage Health Tips</h2>
+            <p>Create and delete health tips that will be visible to patients.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Add New Health Tip</h3>
+            <form id="add-tip-form" class="portal-form">
+                <div class="form-group">
+                    <label for="title">Tip Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="content">Content</label>
+                    <textarea id="content" name="content" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <input type="text" id="category" name="category" placeholder="e.g., Nutrition, Fitness" required>
+                </div>
+                <button type="submit" class="btn">Add Tip</button>
+            </form>
+        </div>
+
+        <div class="content-section">
+            <h3>Your Published Tips</h3>
+            <div id="tips-list">
+                <p>Loading your health tips...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

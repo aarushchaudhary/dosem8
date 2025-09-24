@@ -1,6 +1,7 @@
 // 1. IMPORT DEPENDENCIES
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session'); // <-- Import express-session
 const connectDB = require('./config/database');
 
 // 2. INITIALIZE APP & CONNECT TO DATABASE
@@ -10,6 +11,19 @@ connectDB();
 // 3. SET UP MIDDLEWARE
 // This allows your app to accept JSON in request bodies
 app.use(express.json()); 
+
+// --- NEW: SESSION MIDDLEWARE ---
+app.use(session({
+    secret: process.env.SESSION_SECRET, // Add a SESSION_SECRET to your .env file
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+        httpOnly: true, // Prevents client-side JS from reading the cookie
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    }
+}));
+
 // This serves all static files (HTML, CSS, client-side JS) from the 'public' folder
 app.use(express.static('public'));
 

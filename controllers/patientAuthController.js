@@ -59,26 +59,42 @@ exports.login = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid credentials' });
         }
 
-        // User is valid, create a JWT payload
-        const payload = {
-            user: {
-                id: user.id
-            }
-        };
+        // --- NEW: Generate two tokens ---
+        const accessTokenPayload = { user: { id: user.id } };
+        const refreshTokenPayload = { user: { id: user.id, isRefreshToken: true } };
 
-        // Sign the token
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' }, // Token expires in 8 hours (extended from 1 hour)
-            (err, token) => {
-                if (err) throw err;
-                res.status(200).json({ success: true, token });
-            }
-        );
+        const accessToken = jwt.sign(accessTokenPayload, process.env.JWT_SECRET, { expiresIn: '15m' }); // Short-lived
+        const refreshToken = jwt.sign(refreshTokenPayload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' }); // Long-lived
+
+        // Store the refresh token in the user's session
+        req.session.refreshToken = refreshToken;
+
+        res.status(200).json({ success: true, token: accessToken }); // Only send the access token
 
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Refresh access token using session refresh token
+// @route   POST /api/patient/refresh
+exports.refreshToken = (req, res) => {
+    const { refreshToken } = req.session;
+
+    if (!refreshToken) {
+        return res.status(401).json({ success: false, message: 'No refresh token in session' });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        const accessTokenPayload = { user: { id: decoded.user.id } };
+        const newAccessToken = jwt.sign(accessTokenPayload, process.env.JWT_SECRET, { expiresIn: '15m' });
+
+        res.status(200).json({ success: true, token: newAccessToken });
+
+    } catch (err) {
+        res.status(403).json({ success: false, message: 'Invalid refresh token' });
     }
 };

@@ -649,16 +649,29 @@ document.addEventListener('DOMContentLoaded', () => {
         mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
 
         try {
-            const response = await fetch(url, mergedOptions);
-            const result = await response.json();
+            let response = await fetch(url, mergedOptions);
             
             if (response.status === 401) {
-                console.log('Patient authentication failed:', result.message);
-                handleLogout();
-                return { success: false, message: result.message || 'Session expired. Please log in again.' };
+                // --- NEW: Token Refresh Logic ---
+                const refreshResult = await fetch('/api/patient/refresh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const newAuthData = await refreshResult.json();
+
+                if (newAuthData.success) {
+                    localStorage.setItem('token', newAuthData.token);
+                    // Update the headers and retry the original request
+                    mergedOptions.headers['x-auth-token'] = newAuthData.token;
+                    response = await fetch(url, mergedOptions);
+                } else {
+                    handleLogout();
+                    return { success: false, message: 'Session expired. Please log in again.' };
+                }
             }
             
-            return result;
+            return await response.json();
         } catch (error) {
             console.error('API Fetch Error:', error);
             return { success: false, message: 'Network error or server is down.' };

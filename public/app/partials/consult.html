@@ -1,22 +1,22 @@
 <div id="consult-view">
     <h2>Consult a Pharmacy</h2>
     
-    <div id="new-consult-section" class="summary-card">
+    <div class="summary-card">
         <h3>Start a New Consultation</h3>
         <form id="new-consult-form" class="simple-form">
             <select name="pharmacyId" id="pharmacy-select" required>
-                <option value="">Select a Pharmacy...</option>
+                <option value="" disabled selected>Select a Pharmacy...</option>
             </select>
             <textarea name="initialQuestion" id="initial-question" rows="4" placeholder="Type your first message here..." required></textarea>
             <button type="submit">Start Chat</button>
         </form>
     </div>
 
-    <hr>
-
-    <h3>Your Conversations</h3>
-    <div id="consultation-list">
-        <p>Loading your conversations...</p>
+    <div id="conversations-section">
+        <h3>Your Conversations</h3>
+        <div id="consultation-list">
+            <p>Loading your conversations...</p>
+        </div>
     </div>
 </div>
 

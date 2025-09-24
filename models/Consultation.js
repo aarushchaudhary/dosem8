@@ -38,10 +38,10 @@ const consultationSchema = new mongoose.Schema({
         default: 'open'
     },
     messages: [messageSchema], // Array to store the conversation
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+}, {
+    // This is the crucial addition.
+    // It enables automatic `createdAt` and `updatedAt` fields.
+    timestamps: true
 });
 
 const Consultation = mongoose.model('Consultation', consultationSchema);

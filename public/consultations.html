@@ -9,28 +9,36 @@
 <body>
     <div id="nav-placeholder"></div>
 
-    <main class="container chat-container">
-        <div id="consultation-list-panel">
-            <h2>Patient Conversations</h2>
-            <div id="consultation-list">
-                <p>Loading open consultations...</p>
-            </div>
+    <main class="container">
+        <div class="page-header">
+            <h1>Patient Consultations</h1>
+            <p>Select a conversation from the list to begin chatting.</p>
         </div>
 
-        <div id="chat-panel">
-            <div id="chat-panel-placeholder">
-                <p>Select a conversation to start chatting.</p>
-            </div>
-            <div id="chat-view-pharmacy" style="display: none;">
-                <div class="chat-header">
-                    <h3 id="chat-with-patient-name"></h3>
+        <div class="chat-container">
+            <div id="consultation-list-panel" class="content-section">
+                <h3>Conversations</h3>
+                <div id="consultation-list">
+                    <p>Loading open consultations...</p>
                 </div>
-                <div id="chat-messages-pharmacy" class="chat-display">
+            </div>
+
+            <div id="chat-panel" class="content-section">
+                <div id="chat-panel-placeholder">
+                    <p>Select a conversation to start chatting.</p>
+                </div>
+                <div id="chat-view-pharmacy" style="display: none;">
+                    <div class="chat-header">
+                        <button id="back-to-list-btn" class="btn-back-mobile">← Back</button>
+                        <h3 id="chat-with-patient-name"></h3>
                     </div>
-                <form id="pharmacy-reply-form" class="chat-form">
-                    <input type="text" id="pharmacy-reply-text" placeholder="Type your reply..." required>
-                    <button type="submit" class="btn">Send</button>
-                </form>
+                    <div id="chat-messages-pharmacy" class="chat-display">
+                        </div>
+                    <form id="pharmacy-reply-form" class="chat-form">
+                        <input type="text" id="pharmacy-reply-text" placeholder="Type your reply..." required>
+                        <button type="submit" class="btn">Send</button>
+                    </form>
+                </div>
             </div>
         </div>
     </main>

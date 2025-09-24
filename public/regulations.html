@@ -10,31 +10,39 @@
     <div id="nav-placeholder"></div>
 
     <main class="container">
-        <h2>AI Regulatory Assistant</h2>
-        <p>Ask a question about Indian pharmacy regulations.</p>
-        <div id="chat-display">
-            <div class="chat-message ai-message">
-                Hello! How can I help you today?
+        <div class="page-header">
+            <h1>AI Assistants</h1>
+            <p>Your tools for regulatory questions and interaction checks.</p>
+        </div>
+
+        <div class="ai-container">
+            <div class="content-section ai-card">
+                <h3>AI Regulatory Assistant</h3>
+                <div id="chat-display" class="chat-display">
+                    <div class="chat-message ai-message">
+                        Hello! How can I help you today with Indian pharmacy regulations?
+                    </div>
+                </div>
+                <form id="ai-form" class="chat-form">
+                    <input type="text" id="question" name="question" placeholder="Type your question here..." required>
+                    <button type="submit" class="btn">Ask AI</button>
+                </form>
+            </div>
+
+            <div class="content-section ai-card">
+                <h3>Drug Interaction Checker</h3>
+                <p>Enter two or more items to check for interactions. You can include drugs, foods, or conditions.</p>
+                <form id="interaction-form" class="portal-form">
+                    <div class="form-group">
+                        <textarea id="drugs" name="drugs" rows="4" placeholder="e.g., Aspirin, Ibuprofen, Warfarin, with grapefruit juice" required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Check Interactions</button>
+                </form>
+                <div id="interaction-result" class="interaction-result-card" style="display: none;"></div>
             </div>
         </div>
-        <form id="ai-form">
-            <div class="form-group">
-                <input type="text" id="question" name="question" placeholder="Type your question here..." required>
-            </div>
-            <button type="submit" class="btn">Ask AI</button>
-        </form>
-
-        <hr style="margin: 2rem 0;">
-
-        <h2>Drug Interaction Checker</h2>
-        <p>Enter two or more drugs to check for interactions. You can also include foods or conditions.</p>
-        <form id="interaction-form">
-            <div class="form-group">
-                <textarea id="drugs" name="drugs" rows="4" placeholder="e.g., Aspirin, Ibuprofen, Warfarin, with grapefruit juice" required></textarea>
-            </div>
-            <button type="submit" class="btn">Check Interactions</button>
-        </form>
     </main>
+    
     <script src="/js/main.js"></script>
 </body>
 </html>

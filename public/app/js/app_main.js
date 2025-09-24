@@ -517,17 +517,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const drugs = drugsInput.value;
             if (!drugs) return;
 
+            const responseEl = document.getElementById('ai-response');
+            const button = e.target.querySelector('button');
+            const originalButtonText = button.textContent;
+            
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Checking...';
+            responseEl.style.display = 'block';
+            responseEl.innerHTML = '<p>Getting response from AI...</p>';
+
             const result = await fetchWithAuth('/api/ai/check-interactions', {
                 method: 'POST',
                 body: JSON.stringify({ drugs }),
             });
 
-            const responseEl = document.getElementById('ai-response');
             if (result.success) {
                 responseEl.innerHTML = `<p>${result.answer}</p>`;
             } else {
                 responseEl.innerHTML = `<p>Error: ${result.message}</p>`;
             }
+            
+            // Restore button state
+            button.disabled = false;
+            button.textContent = originalButtonText;
         });
     };
 
@@ -553,14 +566,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderHealthTipsPage = async () => {
         const tipsContainer = document.getElementById('tips-container');
         const tipsRes = await fetchWithAuth('/api/health-tips');
-        if (tipsRes.success) {
-            tipsContainer.innerHTML = tipsRes.data.map(tip => `
-                <div class="tip-card">
-                    <p class="tip-author">From: ${tip.pharmacy.pharmacyName}</p>
-                    <h3>${tip.title}</h3>
-                    <p>${tip.content}</p>
-                </div>
-            `).join('');
+        
+        if (tipsRes.success && tipsRes.data.length > 0) {
+            tipsContainer.innerHTML = tipsRes.data
+                .map(tip => {
+                    // Defensive check: Ensure pharmacy exists and has a name
+                    const pharmacyName = tip.pharmacy ? tip.pharmacy.pharmacyName : 'An anonymous pharmacy';
+                    
+                    return `
+                        <div class="tip-card">
+                            <p class="tip-author">From: ${pharmacyName}</p>
+                            <h3>${tip.title}</h3>
+                            <p>${tip.content}</p>
+                        </div>
+                    `;
+                })
+                .join('');
+        } else {
+            tipsContainer.innerHTML = '<p>No health tips are available at the moment. Please check back later!</p>';
         }
     };
 

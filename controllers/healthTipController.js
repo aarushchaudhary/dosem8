@@ -10,26 +10,32 @@ exports.getHealthTips = async (req, res) => {
         let query;
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-        // If the 'new' query param is present, filter by date
         if (req.query.new === 'true') {
             query = HealthTip.find({ createdAt: { $gte: twentyFourHoursAgo } });
         } 
-        // If there is a search query 'q' in the URL
         else if (req.query.q) {
             query = HealthTip.find(
                 { $text: { $search: req.query.q } },
                 { score: { $meta: 'textScore' } }
             ).sort({ score: { $meta: 'textScore' } });
         } else {
-            // Otherwise, get all tips, sorted by newest first
             query = HealthTip.find().sort({ createdAt: -1 });
         }
 
-        // Populate the pharmacy field with the pharmacyName
         const tips = await query.populate('pharmacy', 'pharmacyName');
 
-        res.status(200).json({ success: true, count: tips.length, data: tips });
+        // Filter out tips where the pharmacy might have been deleted or is otherwise missing
+        const validTips = tips.filter(tip => {
+            if (tip.pharmacy) {
+                return true;
+            }
+            console.warn(`Health tip with ID ${tip._id} has a missing or invalid pharmacy reference.`);
+            return false;
+        });
+
+        res.status(200).json({ success: true, count: validTips.length, data: validTips });
     } catch (error) {
+        console.error("Error fetching health tips:", error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

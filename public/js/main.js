@@ -34,8 +34,23 @@ document.addEventListener('DOMContentLoaded', () => {
             setupAdForm();
             break;
         case '/consultations.html':
-            // Setup the entire consultation page, including the form handler
+            // Setup the entire consultation page
             setupConsultationPage();
+
+            // NEW: Check for a chat_id query parameter to open a chat directly
+            const urlParams = new URLSearchParams(window.location.search);
+            const chatId = urlParams.get('chat_id');
+            if (chatId) {
+                // A delay ensures the consultation list is loaded before we try to open a chat
+                setTimeout(() => {
+                    const chatItem = document.querySelector(`.list-item-clickable[data-id="${chatId}"]`);
+                    if (chatItem) {
+                        chatItem.click(); // Simulate a click to open the chat
+                    } else {
+                        loadChatView(chatId); // Fallback to load it directly
+                    }
+                }, 500); 
+            }
             break;
         case '/health_tips.html':
             loadPharmacyHealthTips();
@@ -166,16 +181,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Page Initializers & Handlers ---
     async function fetchDashboardData() {
-        const dashboardContent = document.getElementById('dashboard-content');
+        const welcomeCard = document.getElementById('welcome-card');
+        const notificationsContainer = document.getElementById('dashboard-notifications');
+        
         const result = await fetchWithAuth('/api/dashboard');
         
         if (result.success) {
-            const { pharmacyName, email, createdAt } = result.data;
-            dashboardContent.innerHTML = `
-                <h3>Welcome, ${pharmacyName}!</h3>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Member Since:</strong> ${new Date(createdAt).toLocaleDateString()}</p>
+            const { pharmacy, unreadConsultations } = result.data;
+
+            // Render Welcome Card
+            welcomeCard.innerHTML = `
+                <h3>Welcome, ${pharmacy.pharmacyName}!</h3>
+                <p><strong>Email:</strong> ${pharmacy.email}</p>
+                <p><strong>Member Since:</strong> ${new Date(pharmacy.createdAt).toLocaleDateString()}</p>
             `;
+
+            // Render Notifications Card
+            if (unreadConsultations && unreadConsultations.length > 0) {
+                notificationsContainer.innerHTML = unreadConsultations.map(con => {
+                    const lastMessage = con.messages[con.messages.length - 1];
+                    return `
+                        <div class="notification-item" data-consultation-id="${con._id}">
+                            <p><strong>New message from ${con.patient.name}</strong></p>
+                            <p class="notification-snippet"><em>"${escapeHtml(lastMessage.text)}"</em></p>
+                        </div>
+                    `;
+                }).join('');
+
+                // Add event listeners to make each notification a link to the chat
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const consultationId = item.dataset.consultationId;
+                        window.location.href = `/consultations.html?chat_id=${consultationId}`;
+                    });
+                });
+
+            } else {
+                notificationsContainer.innerHTML = '<p>No new messages from patients.</p>';
+            }
+
+        } else {
+            welcomeCard.innerHTML = '<p>Could not load your data.</p>';
+            notificationsContainer.innerHTML = '<p>Could not load notifications.</p>';
         }
     }
 
@@ -216,8 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const drugs = drugsInput.value;
         if (!drugs) return;
 
-        appendMessage(`Checking interactions for: ${drugs}`, 'user-message');
-        drugsInput.value = '';
+        // Show loading state
+        const resultCard = document.getElementById('interaction-result');
+        resultCard.style.display = 'block';
+        resultCard.textContent = 'Checking...';
 
         const result = await fetchWithAuth('/api/ai/check-interactions', {
             method: 'POST',
@@ -225,9 +274,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         if (result.success) {
-            appendMessage(result.answer, 'ai-message');
+            resultCard.textContent = result.answer;
         } else {
-            appendMessage('Sorry, there was an error checking for interactions.', 'ai-message');
+            resultCard.textContent = 'Sorry, there was an error checking for interactions.';
         }
     }
     
@@ -271,6 +320,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set up ONE persistent event listener for the reply form
         const replyForm = document.getElementById('pharmacy-reply-form');
         replyForm.addEventListener('submit', handlePharmacyReply);
+
+        // --- NEW: Event listener for the mobile back button ---
+        const backBtn = document.getElementById('back-to-list-btn');
+        const chatContainer = document.querySelector('.chat-container');
+        
+        backBtn.addEventListener('click', () => {
+            if (chatContainer) {
+                chatContainer.classList.remove('chat-active');
+            }
+        });
     }
 
     async function handlePharmacyReply(e) {
@@ -357,6 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadChatView(consultationId) {
+        // --- NEW: Add a class to the container to switch views on mobile ---
+        const chatContainer = document.querySelector('.chat-container');
+        if (chatContainer) {
+            chatContainer.classList.add('chat-active');
+        }
+
         // Set the global variable to the current chat ID
         currentChatId = consultationId;
 

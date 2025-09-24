@@ -1,8 +1,13 @@
-<h2>Drug Interaction Checker</h2>
-<p>Enter two or more drugs to check for interactions. You can also include foods or conditions.</p>
-<form id="interaction-form" class="simple-form">
-    <textarea id="drugs" name="drugs" rows="4" placeholder="e.g., Aspirin, Ibuprofen, Warfarin, with grapefruit juice" required></textarea>
-    <button type="submit">Check Interactions</button>
-</form>
-<div id="ai-response" class="response-card">
-    </div>
+<h2>Ask AI</h2>
+
+<div class="summary-card">
+    <h3>Drug Interaction Checker</h3>
+    <p>Enter two or more items to check for interactions. You can also include drugs, foods, or conditions.</p>
+    <form id="interaction-form" class="simple-form">
+        <textarea id="drugs" name="drugs" rows="4" placeholder="e.g., Aspirin, Ibuprofen, Warfarin..." required></textarea>
+        <button type="submit">Check Interactions</button>
+    </form>
+</div>
+
+<div id="ai-response" class="response-card" style="display: none;">
+</div>

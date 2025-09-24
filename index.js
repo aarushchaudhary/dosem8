@@ -46,6 +46,7 @@ app.use('/api/pharmacy/health-tips', require('./routes/pharmacyHealthTipRoutes')
 // ... (previous app.use lines) ...
 app.use('/api/pharmacy/health-tips', require('./routes/pharmacyHealthTipRoutes'));
 app.use('/api/pharmacies', require('./routes/pharmacyRoutes')); // <-- ADD THIS LINE
+app.use('/api/pharmacy-reports', require('./routes/pharmacyReportRoutes')); // <-- ADD THIS LINE
 
 // --- PATIENT-FACING APP API ROUTES ---
 // ... (rest of the file) ...

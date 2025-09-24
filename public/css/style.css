@@ -336,6 +336,8 @@ h1, h2, h3 {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    padding: 1rem;
+    box-sizing: border-box;
 }
 
 .auth-page #app-content {
@@ -348,8 +350,76 @@ h1, h2, h3 {
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
+.auth-page h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--portal-primary-color);
+}
+
+.auth-page p {
+    text-align: center;
+    color: var(--portal-muted-text-color);
+    margin-bottom: 1.5rem;
+}
+
+.auth-page .simple-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
 .auth-page .simple-form input {
-    margin-bottom: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--portal-border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.auth-page .simple-form input:focus {
+    outline: none;
+    border-color: var(--portal-primary-color);
+}
+
+.auth-page .simple-form button {
+    padding: 1rem;
+    background-color: var(--portal-primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.auth-page .simple-form button:hover {
+    background-color: #0056b3;
+}
+
+.auth-page a {
+    color: var(--portal-primary-color);
+    text-decoration: none;
+}
+
+.auth-page a:hover {
+    text-decoration: underline;
+}
+
+/* Mobile responsiveness for auth pages */
+@media (max-width: 480px) {
+    .auth-page {
+        padding: 0.5rem;
+    }
+    
+    .auth-page #app-content {
+        padding: 1.5rem;
+    }
+    
+    .auth-page .simple-form input,
+    .auth-page .simple-form button {
+        padding: 0.8rem;
+    }
 }
 
 /* --- AI Assistant & Interaction Checker Page --- */
@@ -611,4 +681,16 @@ h1, h2, h3 {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* --- NEW: Premium Badge Styling --- */
+.premium-badge {
+    background-color: #ffc107;
+    color: #000;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
+    align-self: center; /* Aligns badge vertically with the title */
 }

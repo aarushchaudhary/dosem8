@@ -25,6 +25,18 @@ const pharmacySchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    // --- NEW SECTION FOR PREMIUM FEATURES ---
+    subscription: {
+        plan: {
+            type: String,
+            enum: ['free', 'premium'],
+            default: 'free'
+        },
+        expires: {
+            type: Date,
+            default: null
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now

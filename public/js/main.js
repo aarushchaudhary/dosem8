@@ -52,6 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 500); 
             }
             break;
+        // --- NEW CASE ADDED ---
+        case '/reports.html':
+            fetchPharmacyReportData();
+            break;
         case '/health_tips.html':
             loadPharmacyHealthTips();
             setupTipForm();
@@ -113,6 +117,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     handleLogout();
                     return { success: false, message: 'Session expired. Please log in again.' };
                 }
+            }
+            
+            // --- MODIFIED TO RETURN FULL RESPONSE FOR ERROR HANDLING ---
+            if (!response.ok) {
+                // If we get a non-2xx response, we still try to parse it as JSON
+                // This is useful for capturing 403 Forbidden messages
+                const errorData = await response.json();
+                return { success: false, message: errorData.message || `HTTP error! status: ${response.status}` };
             }
 
             return await response.json();
@@ -201,6 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.success) {
             const { pharmacy, unreadConsultations } = result.data;
 
+            // --- MODIFIED PART ---
+            // Check if the pharmacy has a premium plan
+            const isPremium = pharmacy.subscription && pharmacy.subscription.plan === 'premium';
+
             // Render Welcome Card
             const now = new Date();
             const time = now.toLocaleTimeString('en-US', { 
@@ -219,7 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Dashboard data loaded successfully:', { pharmacy, time, date });
 
             welcomeCard.innerHTML = `
-                <h3>Welcome, ${pharmacy.pharmacyName}!</h3>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <h3>Welcome, ${pharmacy.pharmacyName}!</h3>
+                    ${isPremium ? '<span class="premium-badge">★ Premium</span>' : ''}
+                </div>
                 <p><strong>Email:</strong> ${pharmacy.email}</p>
                 <p><strong>Member Since:</strong> ${new Date(pharmacy.createdAt).toLocaleDateString()}</p>
                 <hr style="margin: 15px 0; border: none; height: 1px; background-color: #e9ecef;">
@@ -257,6 +276,36 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Dashboard API call failed:', result);
             welcomeCard.innerHTML = '<p>Could not load your data.</p>';
             notificationsContainer.innerHTML = '<p>Could not load notifications.</p>';
+        }
+    }
+
+    // --- NEW FUNCTION FOR PHARMACY REPORTS ---
+    async function fetchPharmacyReportData() {
+        const reportContainer = document.getElementById('report-container');
+        const result = await fetchWithAuth('/api/pharmacy-reports');
+
+        if (result.success) {
+            const { month, consultationCount, healthTipCount, advertisementStats } = result.data;
+            reportContainer.innerHTML = `
+                <div class="content-section">
+                    <h3>Report for ${month}</h3>
+                    <p><strong>Total Patient Consultations:</strong> ${consultationCount}</p>
+                    <p><strong>Health Tips Published:</strong> ${healthTipCount}</p>
+                    <h4>Advertisement Performance</h4>
+                    <p><strong>Total Campaigns:</strong> ${advertisementStats.totalCampaigns}</p>
+                    <p><strong>Total Clicks:</strong> ${advertisementStats.totalClicks}</p>
+                </div>
+            `;
+        } else {
+            // This will catch the "Premium access required" message from the backend
+            reportContainer.innerHTML = `
+                <div class="content-section" style="text-align: center;">
+                    <h3>Unlock Business Reports</h3>
+                    <p>${result.message || 'An error occurred.'}</p>
+                    <p>Upgrade to a Premium plan to access detailed analytics about your pharmacy's performance.</p>
+                    <button class="btn" onclick="alert('Upgrade flow not implemented.')">Go Premium</button>
+                </div>
+            `;
         }
     }
 

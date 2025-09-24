@@ -22,3 +22,5 @@ Thumbs.db
 # Configuration files for code editors like VS Code.
 .vscode/
 .idea/
+
+createpremium.js

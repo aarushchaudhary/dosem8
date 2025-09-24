@@ -27,3 +27,16 @@ exports.createAdvertisement = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
+
+// @desc    Get all active advertisements for patients
+// @route   GET /api/advertisements/active
+// @access  Private
+exports.getActiveAdvertisements = async (req, res) => {
+    try {
+        const advertisements = await Advertisement.find({ status: 'active' })
+            .populate('pharmacy', 'pharmacyName'); // Include pharmacy name
+        res.status(200).json({ success: true, data: advertisements });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};

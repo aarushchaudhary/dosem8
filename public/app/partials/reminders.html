@@ -1,11 +1,14 @@
 <h2>Medication Reminders</h2>
 <div id="medication-list">
-    </div>
+</div>
 <hr>
 <h3>Add New Medication</h3>
 <form id="add-med-form" class="simple-form">
-    <input type="text" name="medicationName" placeholder="Medication Name" required>
-    <input type="text" name="dosage" placeholder="Dosage (e.g., 500mg)">
-    <input type="text" name="times" placeholder="Times (e.g., 08:00, 20:00)" required>
+    <input type="text" name="medicationName" placeholder="Medication Name *" required>
+    <input type="text" name="dosage" placeholder="Dosage (e.g., 500mg, 1 tablet)">
+    <label for="date">Start Date *</label>
+    <input type="date" name="date" id="date" required> 
+    <input type="text" name="times" placeholder="Times (e.g., 08:00, 20:00) *" required>
+    <small>Enter times separated by commas in 24-hour format</small>
     <button type="submit">Add Medication</button>
 </form>

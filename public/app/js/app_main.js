@@ -84,6 +84,60 @@ document.addEventListener('DOMContentLoaded', () => {
         router();
         window.addEventListener('hashchange', router);
         attachLogoutHandler();
+        attachMarkAsTakenHandler(); // Add global event handler
+    };
+
+    // Global event handler for "Mark as Taken" buttons using event delegation
+    const attachMarkAsTakenHandler = () => {
+        document.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('btn-mark-taken')) {
+                e.preventDefault();
+                
+                const button = e.target;
+                const medId = button.dataset.id;
+                
+                // Prevent double-clicks
+                if (button.disabled) {
+                    return;
+                }
+                
+                try {
+                    // Disable button and show loading state
+                    button.disabled = true;
+                    const originalText = button.textContent;
+                    button.textContent = 'Marking...';
+                    
+                    const result = await fetchWithAuth(`/api/medications/${medId}/taken`, { 
+                        method: 'POST' 
+                    });
+                    
+                    if (result.success) {
+                        // Show success feedback
+                        button.textContent = 'Marked!';
+                        button.style.backgroundColor = '#4CAF50';
+                        
+                        // Refresh the dashboard after a brief delay
+                        setTimeout(() => {
+                            renderHomePage();
+                        }, 800); // Slightly longer delay for better UX
+                    } else {
+                        // Handle API error
+                        alert('Failed to mark medication as taken: ' + (result.message || 'Unknown error'));
+                        
+                        // Restore button state
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    }
+                } catch (error) {
+                    console.error('Error marking medication as taken:', error);
+                    alert('An error occurred while marking medication as taken. Please try again.');
+                    
+                    // Restore button state
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            }
+        });
     };
 
     const router = async () => {
@@ -103,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Page-Specific Logic ---
     const renderHomePage = async () => {
+        // --- 1. Greet the User ---
         const userRes = await fetchWithAuth('/api/user/profile');
         if (userRes.success) {
             const greetingEl = document.getElementById('greeting-name');
@@ -110,6 +165,96 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isPremiumUser) {
                 greetingEl.innerHTML += ' <span class="premium-badge">★ Premium</span>';
             }
+        }
+
+        // --- 2. Render Medicine Reminders ---
+        const remindersContainer = document.getElementById('dashboard-reminders');
+        const medRes = await fetchWithAuth('/api/medications');
+        if (medRes.success && medRes.data.length > 0) {
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const todayEnd = new Date(todayStart);
+            todayEnd.setDate(todayEnd.getDate() + 1); // Next day start
+            
+            const upcomingDoses = medRes.data.flatMap(med => {
+                return med.schedule.times
+                    .map((time, index) => ({ 
+                        ...med, 
+                        doseTime: time,
+                        doseIndex: index,
+                        uniqueId: `${med._id}_${index}` // Create unique ID for each dose
+                    }))
+                    .filter(dose => {
+                        // Count how many times this medication was taken today
+                        const todayTakenCount = dose.takenTimestamps.filter(ts => {
+                            const takenDate = new Date(ts);
+                            return takenDate >= todayStart && takenDate < todayEnd;
+                        }).length;
+                        
+                        // Show this dose if we haven't reached the total daily doses yet
+                        // and this dose index is greater than or equal to doses already taken
+                        return dose.doseIndex >= todayTakenCount;
+                    });
+            });
+
+            if (upcomingDoses.length > 0) {
+                remindersContainer.innerHTML = upcomingDoses.map(dose => `
+                    <div class="summary-card">
+                        <p><strong>${dose.medicationName}</strong> (${dose.dosage}) at ${dose.doseTime}</p>
+                        <button class="btn-mark-taken" data-id="${dose._id}" data-dose-index="${dose.doseIndex}">Mark as Taken</button>
+                    </div>
+                `).join('');
+            } else {
+                remindersContainer.innerHTML = '<p>No more doses for today!</p>';
+            }
+
+        } else {
+            remindersContainer.innerHTML = '<p>You have no medications scheduled.</p>';
+        }
+
+        // --- 3. Render Notifications ---
+        const notificationsContainer = document.getElementById('dashboard-notifications');
+        // This requires a new patient-specific notification endpoint, which we've planned for
+        // For now, we'll assume an endpoint /api/patient/notifications exists
+        const notifRes = { success: false, data: [] }; // Placeholder for actual API call
+        if (notifRes.success && notifRes.data.length > 0) {
+            notificationsContainer.innerHTML = notifRes.data.map(n => `
+                <div class="summary-card">
+                    <a href="${n.link}">${n.message}</a>
+                </div>
+            `).join('');
+        } else {
+            notificationsContainer.innerHTML = '<p>No new notifications.</p>';
+        }
+
+        // --- 4. Render New Health Tips ---
+        const tipsContainer = document.getElementById('dashboard-health-tips');
+        const tipsRes = await fetchWithAuth('/api/health-tips?new=true');
+        if (tipsRes.success && tipsRes.data.length > 0) {
+            tipsContainer.innerHTML = tipsRes.data.map(tip => `
+                <div class="tip-card">
+                    <p class="tip-author">From: ${tip.pharmacy.pharmacyName}</p>
+                    <h3>${tip.title}</h3>
+                    <p>${tip.content}</p>
+                </div>
+            `).join('');
+        } else {
+            tipsContainer.innerHTML = '<p>No new health tips in the last 24 hours.</p>';
+        }
+
+        // --- 5. Render Advertisements ---
+        const adsContainer = document.getElementById('dashboard-advertisements');
+        const adsRes = await fetchWithAuth('/api/advertisements/active');
+        if (adsRes.success && adsRes.data.length > 0) {
+            adsContainer.innerHTML = adsRes.data.map(ad => `
+                <div class="summary-card">
+                    <p class="tip-author">${ad.pharmacy.pharmacyName}</p>
+                    <h4>${ad.campaignTitle}</h4>
+                    <p>${ad.content}</p>
+                </div>
+            `).join('');
+        } else {
+            adsContainer.innerHTML = '<p>No special offers right now.</p>';
         }
 
         const reportsSection = document.getElementById('reports-section');
@@ -134,9 +279,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (medRes.success && medRes.data.length > 0) {
             medList.innerHTML = medRes.data.map(med => `
                 <div class="med-card">
-                    <h4>${med.medicationName}</h4>
-                    <p>Dosage: ${med.dosage || 'N/A'}</p>
-                    <p>Schedule: ${med.schedule.times.join(', ')}</p>
+                    <div class="med-info">
+                        <h4>${med.medicationName}</h4>
+                        <p>Dosage: ${med.dosage || 'N/A'}</p>
+                        <p>Schedule: ${med.schedule.times.join(', ')}</p>
+                        <p>Start Date: ${new Date(med.schedule.date).toLocaleDateString()}</p>
+                    </div>
+                    <div class="med-actions">
+                        <button class="btn-delete-med" data-id="${med._id}" data-name="${med.medicationName}">
+                            Delete
+                        </button>
+                    </div>
                 </div>
             `).join('');
         } else {
@@ -146,22 +299,92 @@ document.addEventListener('DOMContentLoaded', () => {
         addMedForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(addMedForm);
+            
+            // Validate required fields
+            const medicationName = formData.get('medicationName');
+            const dateValue = formData.get('date');
+            const timesValue = formData.get('times');
+            
+            if (!medicationName || !dateValue || !timesValue) {
+                alert('Please fill in all required fields (Medication Name, Date, and Times)');
+                return;
+            }
+            
             const data = {
-                medicationName: formData.get('medicationName'),
-                dosage: formData.get('dosage'),
+                medicationName: medicationName,
+                dosage: formData.get('dosage') || '',
                 schedule: {
+                    date: new Date(dateValue).toISOString(), // Convert to proper ISO date string
                     frequency: 'daily',
-                    times: formData.get('times').split(',').map(t => t.trim())
+                    times: timesValue.split(',').map(t => t.trim()).filter(t => t) // Remove empty entries
                 }
             };
+            
+            console.log('Submitting medication data:', data);
 
             const result = await fetchWithAuth('/api/medications', {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
 
-            if (result.success) { router(); }
-            else { alert('Failed to add medication.'); }
+            if (result.success) { 
+                alert('Medication added successfully!');
+                addMedForm.reset(); // Clear the form
+                router(); 
+            } else { 
+                console.error('Error adding medication:', result);
+                alert('Failed to add medication: ' + (result.message || 'Please check all fields and try again.')); 
+            }
+        });
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.btn-delete-med').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const button = e.target;
+                const medId = button.dataset.id;
+                const medName = button.dataset.name;
+                
+                // Confirm deletion
+                const confirmed = confirm(`Are you sure you want to delete "${medName}"? This action cannot be undone.`);
+                if (!confirmed) {
+                    return;
+                }
+                
+                // Prevent double-clicks
+                if (button.disabled) {
+                    return;
+                }
+                
+                try {
+                    // Disable button and show loading state
+                    button.disabled = true;
+                    const originalText = button.textContent;
+                    button.textContent = 'Deleting...';
+                    
+                    const result = await fetchWithAuth(`/api/medications/${medId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (result.success) {
+                        alert('Medication deleted successfully!');
+                        router(); // Refresh the page to show updated list
+                    } else {
+                        console.error('Error deleting medication:', result);
+                        alert('Failed to delete medication: ' + (result.message || 'Please try again.'));
+                        
+                        // Restore button state on error
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    }
+                } catch (error) {
+                    console.error('Error deleting medication:', error);
+                    alert('An error occurred while deleting the medication. Please try again.');
+                    
+                    // Restore button state on error
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            });
         });
     };
 

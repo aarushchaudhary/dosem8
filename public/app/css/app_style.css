@@ -78,6 +78,61 @@ h2 {
     border: 1px solid var(--app-border-color);
 }
 
+.med-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.med-info {
+    flex: 1;
+}
+
+.med-info p {
+    margin: 0.3rem 0;
+    color: var(--app-muted-text-color);
+}
+
+.med-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Mobile responsiveness for medication cards */
+@media (max-width: 600px) {
+    .med-card {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .med-actions {
+        align-self: flex-end;
+    }
+}
+
+.btn-delete-med {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-delete-med:hover {
+    background-color: #c82333;
+}
+
+.btn-delete-med:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
 .med-card h4, .tip-card h3 {
     margin-top: 0;
 }
@@ -179,4 +234,55 @@ h2 {
 }
 .chat-form-app input {
     flex-grow: 1;
+}
+
+/* Add to the end of app_style.css */
+.dashboard-section {
+    margin-bottom: 2rem;
+}
+.dashboard-section h3 {
+    border-bottom: 2px solid var(--app-border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--app-primary-color);
+}
+
+/* Mark as Taken Button Styles */
+.btn-mark-taken {
+    background-color: var(--app-primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    margin-top: 0.5rem;
+}
+
+.btn-mark-taken:hover:not(:disabled) {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.btn-mark-taken:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-mark-taken:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Premium Badge Styling */
+.premium-badge {
+    background-color: #ffc107;
+    color: #000;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
 }

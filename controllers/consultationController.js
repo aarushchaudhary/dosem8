@@ -1,5 +1,6 @@
 // controllers/consultationController.js
 const Consultation = require('../models/Consultation');
+const Notification = require('../models/Notification');
 
 // @desc    Get all consultations for the logged-in pharmacy
 // @route   GET /api/consultations
@@ -108,6 +109,19 @@ exports.replyToConsultation = async (req, res) => {
         consultation.messages.push(newMessage);
         consultation.status = 'in_progress'; // Mark as in progress
         await consultation.save();
+
+        // If the pharmacy replied, create a notification for the patient
+        if (senderType === 'pharmacy') {
+            await Notification.create({
+                // This is a patient notification, but it's linked to the pharmacy account in the DB
+                // We will need a separate notification schema for patients if we want to separate them fully
+                // For now, let's keep it simple and create a notification for the patient user
+                user: consultation.patient, // The user receiving the notification
+                message: `You have a new message from ${consultation.pharmacy.pharmacyName}`,
+                type: 'consultation',
+                link: `#/chat?id=${consultation._id}`
+            });
+        }
 
         res.status(200).json({ success: true, data: consultation });
     } catch (error) {

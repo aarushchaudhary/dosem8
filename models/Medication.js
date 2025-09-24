@@ -5,7 +5,7 @@ const medicationSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        ref: 'User' // This creates a reference to the User model
+        ref: 'User'
     },
     medicationName: {
         type: String,
@@ -18,6 +18,11 @@ const medicationSchema = new mongoose.Schema({
         default: ''
     },
     schedule: {
+        // ADD THIS NEW FIELD
+        date: {
+            type: Date,
+            required: true
+        },
         frequency: {
             type: String,
             enum: ['daily', 'weekly', 'as_needed'],
@@ -29,6 +34,9 @@ const medicationSchema = new mongoose.Schema({
             trim: true
         }
     },
+    takenTimestamps: [{
+        type: Date
+    }],
     createdAt: {
         type: Date,
         default: Date.now

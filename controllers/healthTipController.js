@@ -8,9 +8,14 @@ const HealthTip = require('../models/HealthTip');
 exports.getHealthTips = async (req, res) => {
     try {
         let query;
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+        // If the 'new' query param is present, filter by date
+        if (req.query.new === 'true') {
+            query = HealthTip.find({ createdAt: { $gte: twentyFourHoursAgo } });
+        } 
         // If there is a search query 'q' in the URL
-        if (req.query.q) {
+        else if (req.query.q) {
             query = HealthTip.find(
                 { $text: { $search: req.query.q } },
                 { score: { $meta: 'textScore' } }

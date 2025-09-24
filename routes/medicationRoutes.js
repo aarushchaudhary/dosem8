@@ -5,7 +5,8 @@ const {
     getUserMedications,
     addMedication,
     updateMedication,
-    deleteMedication
+    deleteMedication,
+    markAsTaken
 } = require('../controllers/medicationController');
 
 const auth = require('../middleware/authMiddleware');
@@ -20,5 +21,8 @@ router.route('/')
 router.route('/:id')
     .put(updateMedication)
     .delete(deleteMedication);
+
+router.route('/:id/taken')
+    .post(markAsTaken);
 
 module.exports = router;

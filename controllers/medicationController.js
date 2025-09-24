@@ -21,10 +21,26 @@ exports.addMedication = async (req, res) => {
         // Add the user's ID to the request body before creating the medication
         req.body.user = req.user.id;
         
+        console.log('Creating medication with data:', req.body);
+        
         const medication = await Medication.create(req.body);
         res.status(201).json({ success: true, data: medication });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Server Error' });
+        console.error('Error creating medication:', error);
+        
+        // Provide more detailed error messages
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(e => e.message);
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Validation Error: ' + errors.join(', ') 
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server Error: ' + error.message 
+        });
     }
 };
 
@@ -74,6 +90,31 @@ exports.deleteMedication = async (req, res) => {
         await medication.deleteOne();
 
         res.status(200).json({ success: true, message: 'Medication removed' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Mark a medication dose as taken for the logged-in user
+// @route   POST /api/medications/:id/taken
+// @access  Private
+exports.markAsTaken = async (req, res) => {
+    try {
+        let medication = await Medication.findById(req.params.id);
+
+        if (!medication) {
+            return res.status(404).json({ success: false, message: 'Medication not found' });
+        }
+
+        if (medication.user.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, message: 'Not authorized' });
+        }
+
+        // Add a new timestamp for when the dose was taken
+        medication.takenTimestamps.push(new Date());
+        await medication.save();
+
+        res.status(200).json({ success: true, data: medication });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }

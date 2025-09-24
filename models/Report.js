@@ -7,21 +7,34 @@ const reportSchema = new mongoose.Schema({
         required: true,
         ref: 'User'
     },
-    month: { type: String, required: true }, // e.g., "September 2025"
-    adherenceScore: {
-        type: Number,
-        min: 0,
-        max: 100
+    pharmacy: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Pharmacy'
     },
-    healthInsights: {
+    medicalInfo: {
+        height: { type: String, required: true },
+        weight: { type: String, required: true },
+        age: { type: Number, required: true },
+        bloodPressure: { type: String },
+        pulse: { type: String },
+        bloodSugar: { type: String }
+    },
+    problemDescription: {
         type: String,
+        required: true,
         trim: true
     },
-    generatedAt: {
-        type: Date,
-        default: Date.now
+    status: {
+        type: String,
+        enum: ['Pending', 'Completed'],
+        default: 'Pending'
+    },
+    pharmacistReport: {
+        type: String,
+        trim: true
     }
-});
+}, { timestamps: true });
 
 const Report = mongoose.model('Report', reportSchema);
 module.exports = Report;

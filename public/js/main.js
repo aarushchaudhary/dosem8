@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
         // --- NEW CASE ADDED ---
         case '/reports.html':
-            fetchPharmacyReportData();
+            // The entire page logic is now handled by this function
+            setupPatientReportsPage();
             break;
         case '/health_tips.html':
             loadPharmacyHealthTips();
@@ -279,36 +280,125 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- NEW FUNCTION FOR PHARMACY REPORTS ---
-    async function fetchPharmacyReportData() {
-        const reportContainer = document.getElementById('report-container');
+    function setupPatientReportsPage() {
+        const reportsContainer = document.querySelector('.reports-container');
+        loadPatientReports();
+
+        // Event listener for generating a report
+        document.getElementById('generate-report-form').addEventListener('submit', handleGenerateReport);
+
+        // Event listener for mobile back button
+        document.getElementById('back-to-report-list-btn').addEventListener('click', () => {
+            reportsContainer.classList.remove('detail-active');
+        });
+    }
+
+    async function loadPatientReports() {
+        const listEl = document.getElementById('patient-reports-list');
         const result = await fetchWithAuth('/api/pharmacy-reports');
 
-        if (result.success) {
-            const { month, consultationCount, healthTipCount, advertisementStats } = result.data;
-            reportContainer.innerHTML = `
-                <div class="content-section">
-                    <h3>Report for ${month}</h3>
-                    <p><strong>Total Patient Consultations:</strong> ${consultationCount}</p>
-                    <p><strong>Health Tips Published:</strong> ${healthTipCount}</p>
-                    <h4>Advertisement Performance</h4>
-                    <p><strong>Total Campaigns:</strong> ${advertisementStats.totalCampaigns}</p>
-                    <p><strong>Total Clicks:</strong> ${advertisementStats.totalClicks}</p>
+        if (result.success && result.data.length > 0) {
+            listEl.innerHTML = result.data.map(report => `
+                <div class="list-item-clickable report-item" data-id="${report._id}">
+                    <h4>Report from: ${report.user.name}</h4>
+                    <p>Status: <strong>${report.status}</strong></p>
+                    <small>Received: ${new Date(report.createdAt).toLocaleString()}</small>
                 </div>
-            `;
+            `).join('');
+
+            document.querySelectorAll('.report-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.report-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    showReportDetails(item.dataset.id);
+                });
+            });
         } else {
-            // This will catch the "Premium access required" message from the backend
-            reportContainer.innerHTML = `
-                <div class="content-section" style="text-align: center;">
-                    <h3>Unlock Business Reports</h3>
-                    <p>${result.message || 'An error occurred.'}</p>
-                    <p>Upgrade to a Premium plan to access detailed analytics about your pharmacy's performance.</p>
-                    <button class="btn" onclick="alert('Upgrade flow not implemented.')">Go Premium</button>
-                </div>
-            `;
+            listEl.innerHTML = '<p>No patient reports found.</p>';
         }
     }
 
+    async function showReportDetails(reportId) {
+        const reportsContainer = document.querySelector('.reports-container');
+        reportsContainer.classList.add('detail-active'); // For mobile view
+
+        document.getElementById('report-detail-placeholder').style.display = 'none';
+        const detailView = document.getElementById('report-detail-view');
+        detailView.style.display = 'block';
+
+        const patientNameEl = document.getElementById('report-patient-name');
+        const infoEl = document.getElementById('patient-submitted-info');
+        const reportIdInput = document.getElementById('report-id-input');
+        const reportTextArea = document.getElementById('pharmacist-report-text');
+
+        // Find the full report data from the already fetched list to avoid another API call
+        const result = await fetchWithAuth('/api/pharmacy-reports'); // In a real app, cache this
+        const report = result.data.find(r => r._id === reportId);
+
+        if (report) {
+            patientNameEl.textContent = `Report for ${report.user.name}`;
+            reportIdInput.value = report._id;
+            
+            const { height, weight, age, bloodPressure, pulse, bloodSugar } = report.medicalInfo;
+
+            infoEl.innerHTML = `
+                <p><strong>Patient Email:</strong> ${report.user.email}</p>
+                <p><strong>Age:</strong> ${age}</p>
+                <p><strong>Height:</strong> ${escapeHtml(height)}</p>
+                <p><strong>Weight:</strong> ${escapeHtml(weight)}</p>
+                <p><strong>Blood Pressure:</strong> ${escapeHtml(bloodPressure) || 'N/A'}</p>
+                <p><strong>Pulse:</strong> ${escapeHtml(pulse) || 'N/A'}</p>
+                <p><strong>Blood Sugar:</strong> ${escapeHtml(bloodSugar) || 'N/A'}</p>
+                <hr>
+                <p><strong>Patient's Problem Description:</strong></p>
+                <p>${escapeHtml(report.problemDescription)}</p>
+            `;
+            
+            // Clear or fill the text area
+            reportTextArea.value = report.pharmacistReport || '';
+            if(report.status === 'Completed'){
+                 reportTextArea.disabled = true;
+                 document.querySelector('#generate-report-form button').disabled = true;
+            } else {
+                reportTextArea.disabled = false;
+                 document.querySelector('#generate-report-form button').disabled = false;
+            }
+
+        } else {
+            infoEl.innerHTML = '<p>Could not find report details.</p>';
+        }
+    }
+
+    async function handleGenerateReport(e) {
+        e.preventDefault();
+        const reportId = document.getElementById('report-id-input').value;
+        const pharmacistReport = document.getElementById('pharmacist-report-text').value;
+
+        if (!pharmacistReport.trim()) {
+            alert('Please provide your analysis before generating the report.');
+            return;
+        }
+
+        const result = await fetchWithAuth(`/api/pharmacy-reports/${reportId}/generate`, {
+            method: 'POST',
+            body: JSON.stringify({ pharmacistReport }),
+        });
+
+        if (result.success) {
+            alert('Report has been generated and sent to the patient.');
+            // Refresh the list to show the "Completed" status
+            loadPatientReports();
+            // Hide detail view and show placeholder
+            document.querySelector('.reports-container').classList.remove('detail-active');
+            document.getElementById('report-detail-view').style.display = 'none';
+            document.getElementById('report-detail-placeholder').style.display = 'block';
+
+        } else {
+            alert('Error generating report: ' + result.message);
+        }
+    }
+
+    // --- NEW FUNCTION FOR PHARMACY REPORTS ---
     function setupAIForm() {
         const aiForm = document.getElementById('ai-form');
         aiForm.addEventListener('submit', handleAIQuery);

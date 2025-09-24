@@ -571,21 +571,49 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderHealthReportsPage = async () => {
-        const reportContent = document.getElementById('report-content');
-        const result = await fetchWithAuth('/api/reports');
-        if (result.success) {
-            const { month, adherenceScore, healthInsights } = result.data;
-            reportContent.innerHTML = `
-                <h3>Report for ${month}</h3>
-                <div class="report-metric">
-                    <strong>Adherence Score:</strong> ${adherenceScore}%
+        const form = document.getElementById('health-report-form');
+        const pharmacySelect = document.getElementById('report-pharmacy-select');
+        const submittedList = document.getElementById('submitted-reports-list');
+
+        // 1. Populate pharmacy dropdown
+        const pharmacyRes = await fetchWithAuth('/api/pharmacies');
+        if (pharmacyRes.success) {
+            pharmacySelect.innerHTML += pharmacyRes.data.map(p => `<option value="${p._id}">${p.pharmacyName}</option>`).join('');
+        }
+
+        // 2. Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            const result = await fetchWithAuth('/api/reports', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            });
+
+            if (result.success) {
+                alert('Your health report has been submitted successfully!');
+                form.reset();
+                renderHealthReportsPage(); // Refresh the list
+            } else {
+                alert('Error: ' + result.message);
+            }
+        });
+
+        // 3. Display submission history
+        const reportsRes = await fetchWithAuth('/api/reports');
+        if (reportsRes.success && reportsRes.data.length > 0) {
+            submittedList.innerHTML = reportsRes.data.map(report => `
+                <div class="summary-card">
+                    <h4>Report to ${report.pharmacy.pharmacyName}</h4>
+                    <p><strong>Status:</strong> ${report.status}</p>
+                    <p><strong>Submitted:</strong> ${new Date(report.createdAt).toLocaleDateString()}</p>
+                    ${report.status === 'Completed' ? `<div class="pharmacist-reply"><p><strong>Pharmacist's Report:</strong></p><p>${escapeHtml(report.pharmacistReport)}</p></div>` : ''}
                 </div>
-                <div class="report-insight">
-                    <strong>Insights:</strong> ${healthInsights}
-                </div>
-            `;
+            `).join('');
         } else {
-            reportContent.innerHTML = `<p>Could not generate your report. Please try again later.</p>`;
+            submittedList.innerHTML = '<p>You have not submitted any reports yet.</p>';
         }
     };
 

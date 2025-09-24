@@ -694,3 +694,60 @@ h1, h2, h3 {
     margin-left: 0.5rem;
     align-self: center; /* Aligns badge vertically with the title */
 }
+
+/* ... (existing styles) ... */
+
+/* --- NEW: Pharmacy Reports Page --- */
+.reports-container {
+    display: grid;
+    grid-template-columns: 35% 1fr; /* 35% for list, remaining for detail */
+    gap: 2rem;
+    align-items: start;
+}
+
+.report-item {
+    cursor: pointer;
+}
+
+.report-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--portal-border-color);
+    margin-bottom: 1rem;
+}
+
+#patient-submitted-info p {
+    margin: 0.5rem 0;
+}
+
+#patient-submitted-info p strong {
+    color: var(--portal-primary-color);
+}
+
+/* --- Mobile Responsiveness for Reports Page --- */
+@media (max-width: 900px) {
+    .reports-container {
+        display: block; /* Stack panels instead of side-by-side */
+    }
+
+    #report-list-panel,
+    #report-detail-panel {
+        width: 100%;
+        box-sizing: border-box; /* Ensures padding is included in width */
+    }
+
+    /* Initially, hide the detail panel on mobile */
+    .reports-container:not(.detail-active) #report-detail-panel {
+        display: none;
+    }
+
+    /* When a report is selected, hide the list and show the details */
+    .reports-container.detail-active #report-list-panel {
+        display: none;
+    }
+    .reports-container.detail-active #report-detail-panel {
+        display: block;
+    }
+}

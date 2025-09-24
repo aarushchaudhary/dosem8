@@ -1,11 +1,16 @@
 // routes/pharmacyReportRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getPharmacyReport } = require('../controllers/pharmacyReportController');
+const { getPatientHealthReports, generatePharmacistReport } = require('../controllers/pharmacyReportController');
 const auth = require('../middleware/authMiddleware');
-const premiumPharmacyAuth = require('../middleware/premiumPharmacyAuth');
 
-// Protect route with both standard and premium pharmacy auth
-router.get('/', [auth, premiumPharmacyAuth], getPharmacyReport);
+// Protect all routes with pharmacy auth
+router.use(auth);
+
+router.route('/')
+    .get(getPatientHealthReports);
+
+router.route('/:id/generate')
+    .post(generatePharmacistReport);
 
 module.exports = router;

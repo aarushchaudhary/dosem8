@@ -1,4 +1,31 @@
-<h2>Your Health Report</h2>
-<div id="report-content" class="summary-card">
-    <p>Generating your report...</p>
+<h2>Health Reports</h2>
+<p>Submit your health information to a pharmacy for a personalized report. This is a premium feature.</p>
+
+<div class="summary-card">
+    <h3>Submit a New Report</h3>
+    <form id="health-report-form" class="simple-form">
+        <select name="pharmacy" id="report-pharmacy-select" required>
+            <option value="" disabled selected>Select a Pharmacy... *</option>
+        </select>
+
+        <div class="form-grid">
+            <input type="text" name="height" placeholder="Height (e.g., 5'10&quot; or 178cm) *" required>
+            <input type="text" name="weight" placeholder="Weight (e.g., 150 lbs or 68kg) *" required>
+            <input type="number" name="age" placeholder="Age *" required>
+            <input type="text" name="bloodPressure" placeholder="Blood Pressure (e.g., 120/80)">
+            <input type="text" name="pulse" placeholder="Pulse (e.g., 72 bpm)">
+            <input type="text" name="bloodSugar" placeholder="Blood Sugar (e.g., 90 mg/dL)">
+        </div>
+        
+        <textarea name="problemDescription" rows="5" placeholder="Describe your problem or symptoms in detail... *" required></textarea>
+        
+        <button type="submit">Submit for Review</button>
+    </form>
+</div>
+
+<div class="dashboard-section">
+    <h3>Your Submitted Reports</h3>
+    <div id="submitted-reports-list">
+        <p>Loading your report history...</p>
+    </div>
 </div>

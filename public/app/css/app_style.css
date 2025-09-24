@@ -439,3 +439,43 @@ h2 {
     cursor: pointer;
     flex-shrink: 0;
 }
+
+/* ... (existing styles) ... */
+
+/* --- Health Reports Page Styling --- */
+
+/* Fix inconsistent styling on some devices */
+.simple-form input,
+.simple-form select,
+.simple-form textarea {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Grid layout for health info inputs */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two clean columns */
+    gap: 0.75rem;
+}
+
+/* Style for the history of submitted reports */
+#submitted-reports-list .summary-card {
+    border-left: 4px solid var(--app-primary-color);
+}
+
+#submitted-reports-list h4 {
+    margin-top: 0;
+}
+
+.pharmacist-reply {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid var(--app-border-color);
+}

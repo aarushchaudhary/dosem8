@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports - DOSEM8 Pharmacy Portal</title>
+    <title>Patient Reports - DOSEM8 Pharmacy Portal</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,12 +11,38 @@
 
     <main class="container">
         <div class="page-header">
-            <h1>Business Reports</h1>
-            <p>View key metrics about your pharmacy's performance on DOSEM8.</p>
+            <h1>Patient Health Reports</h1>
+            <p>Review submitted patient data and generate reports.</p>
         </div>
 
-        <div id="report-container">
-            <p>Loading your report...</p>
+        <div class="reports-container">
+            <div id="report-list-panel" class="content-section">
+                <h3>Pending Reports</h3>
+                <div id="patient-reports-list">
+                    <p>Loading patient reports...</p>
+                </div>
+            </div>
+
+            <div id="report-detail-panel" class="content-section">
+                <div id="report-detail-placeholder">
+                    <p>Select a report from the list to view details.</p>
+                </div>
+                <div id="report-detail-view" style="display: none;">
+                    <div class="report-header">
+                         <button id="back-to-report-list-btn" class="btn-back-mobile">← Back</button>
+                        <h3 id="report-patient-name"></h3>
+                    </div>
+                    <div id="patient-submitted-info"></div>
+                    <form id="generate-report-form">
+                        <input type="hidden" id="report-id-input" />
+                        <div class="form-group">
+                            <label for="pharmacist-report-text">Your Analysis & Report</label>
+                            <textarea id="pharmacist-report-text" rows="8" placeholder="Provide your professional analysis and recommendations here..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn">Generate & Send Report</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </main>
 

@@ -1,34 +1,39 @@
 // controllers/reportController.js
 const Report = require('../models/Report');
-const Medication = require('../models/Medication');
 
-// @desc    Generate and get a health report for the logged-in user
-// @route   GET /api/reports
+// @desc    Submit a new health report
+// @route   POST /api/reports
 // @access  Premium
-exports.getHealthReport = async (req, res) => {
+exports.submitHealthReport = async (req, res) => {
     try {
-        // In a real app, this logic would be much more complex, analyzing logs of when
-        // a user marked their medication as "taken".
-        // For this example, we'll generate a placeholder report based on their number of medications.
+        const { pharmacy, height, weight, age, bloodPressure, pulse, bloodSugar, problemDescription } = req.body;
 
-        const medicationCount = await Medication.countDocuments({ user: req.user.id });
-        const adherenceScore = Math.max(0, 100 - (medicationCount * 5)); // Placeholder calculation
-        const insight = medicationCount > 3 
-            ? "Managing multiple medications can be challenging. Great job staying on top of it! Consider setting specific alarms for each." 
-            : "You're doing well with your current medication schedule. Keep up the consistent effort!";
-        
-        const report = {
+        const reportData = {
             user: req.user.id,
-            month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
-            adherenceScore,
-            healthInsights: insight
+            pharmacy,
+            medicalInfo: { height, weight, age, bloodPressure, pulse, bloodSugar },
+            problemDescription
         };
 
-        // You could save this report to the database here if you wish
-        // await Report.create(report);
+        const report = await Report.create(reportData);
+        res.status(201).json({ success: true, data: report });
 
-        res.status(200).json({ success: true, data: report });
+    } catch (error) {
+        console.error('Error submitting health report:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
 
+// @desc    Get all submitted reports for the logged-in user
+// @route   GET /api/reports
+// @access  Premium
+exports.getSubmittedReports = async (req, res) => {
+    try {
+        const reports = await Report.find({ user: req.user.id })
+            .populate('pharmacy', 'pharmacyName')
+            .sort({ createdAt: -1 });
+            
+        res.status(200).json({ success: true, data: reports });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }

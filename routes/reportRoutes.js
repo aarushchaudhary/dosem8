@@ -1,11 +1,15 @@
 // routes/reportRoutes.js
 const express = require('express');
 const router = express.Router();
-const { getHealthReport } = require('../controllers/reportController');
+const { submitHealthReport, getSubmittedReports } = require('../controllers/reportController');
 const auth = require('../middleware/authMiddleware');
 const premiumAuth = require('../middleware/premiumAuth');
 
-// Protect route with both standard and premium auth
-router.get('/', [auth, premiumAuth], getHealthReport);
+// Protect all routes with both standard and premium auth
+router.use(auth, premiumAuth);
+
+router.route('/')
+    .post(submitHealthReport)
+    .get(getSubmittedReports);
 
 module.exports = router;

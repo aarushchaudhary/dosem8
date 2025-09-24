@@ -190,3 +190,76 @@ nav a:hover {
     color: var(--app-muted-text-color);
     margin-bottom: 0.5rem;
 }
+
+/* ... (existing styles) ... */
+
+/* --- Consultation Chat Layout --- */
+.chat-container {
+    display: flex;
+    gap: 2rem;
+    height: calc(100vh - 120px); /* Adjust based on nav height */
+}
+
+#consultation-list-panel {
+    width: 35%;
+    border-right: 1px solid var(--border-color);
+    padding-right: 2rem;
+    overflow-y: auto;
+}
+
+#chat-panel {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+}
+
+#chat-view-pharmacy {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.list-item-clickable {
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+.list-item-clickable:hover {
+    background-color: #f8f9fa;
+}
+.list-item-clickable h4 {
+    margin: 0 0 0.5rem 0;
+}
+.list-item-clickable p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+#chat-panel-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--secondary-color);
+}
+
+.chat-form {
+    display: flex;
+    margin-top: 1rem;
+    gap: 0.5rem;
+}
+.chat-form input {
+    flex-grow: 1;
+}
+.chat-form button {
+    width: auto;
+}
+
+/* Add this to the bottom of the file */
+.list-item-clickable.active {
+    background-color: #e7f3ff;
+    border-color: var(--primary-color);
+}

@@ -29,7 +29,12 @@ app.use('/api/advertisements', require('./routes/advertisementRoutes'));
 app.use('/api/consultations', require('./routes/consultationRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/pharmacy/health-tips', require('./routes/pharmacyHealthTipRoutes')); // <-- ADD THIS LINE
+// ... (previous app.use lines) ...
+app.use('/api/pharmacy/health-tips', require('./routes/pharmacyHealthTipRoutes'));
+app.use('/api/pharmacies', require('./routes/pharmacyRoutes')); // <-- ADD THIS LINE
 
+// --- PATIENT-FACING APP API ROUTES ---
+// ... (rest of the file) ...
 // ... rest of the file
 
 // ===================================

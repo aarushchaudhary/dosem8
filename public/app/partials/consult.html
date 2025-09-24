@@ -1,9 +1,24 @@
-<h2 id="consult-title">Ask an Expert</h2>
-<p>Get answers to your health questions from our AI assistant.</p>
-<form id="consult-form" class="simple-form">
-    <textarea name="question" id="question" rows="5" placeholder="Type your question here..."></textarea>
-    <button type="submit">Get Answer</button>
-</form>
-<div id="ai-response" class="response-card">
-    <!-- AI's response will appear here -->
+<div id="consult-view">
+    <h2>Consult a Pharmacy</h2>
+    
+    <div id="new-consult-section" class="summary-card">
+        <h3>Start a New Consultation</h3>
+        <form id="new-consult-form" class="simple-form">
+            <select name="pharmacyId" id="pharmacy-select" required>
+                <option value="">Select a Pharmacy...</option>
+            </select>
+            <textarea name="initialQuestion" id="initial-question" rows="4" placeholder="Type your first message here..." required></textarea>
+            <button type="submit">Start Chat</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <h3>Your Conversations</h3>
+    <div id="consultation-list">
+        <p>Loading your conversations...</p>
+    </div>
 </div>
+
+<div id="chat-view" style="display: none;">
+    </div>

@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const currentPage = window.location.pathname;
 
+    // A variable to keep track of the currently active chat
+    let currentChatId = null;
+
     // --- Page Protection & Navigation Loading ---
     if (!token && currentPage !== '/login.html' && currentPage !== '/register.html') {
         window.location.href = '/login.html';
@@ -31,9 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setupAdForm();
             break;
         case '/consultations.html':
-            loadConsultations();
+            // Setup the entire consultation page, including the form handler
+            setupConsultationPage();
             break;
-        case '/health_tips.html': // <-- ADDED THIS CASE
+        case '/health_tips.html':
             loadPharmacyHealthTips();
             setupTipForm();
             break;
@@ -58,6 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             const response = await fetch(url, mergedOptions);
+            if (response.status === 401) {
+                // If token is invalid or expired, force logout
+                handleLogout();
+                return { success: false, message: 'Session expired.' };
+            }
             return await response.json();
         } catch (error) {
             console.error("Fetch Error:", error);
@@ -128,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleLogout(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         localStorage.removeItem('token');
         window.location.href = '/login.html';
     }
@@ -145,8 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p><strong>Email:</strong> ${email}</p>
                 <p><strong>Member Since:</strong> ${new Date(createdAt).toLocaleDateString()}</p>
             `;
-        } else {
-            handleLogout();
         }
     }
 
@@ -233,19 +240,94 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- REFACTORED CONSULTATION AND CHAT FUNCTIONS ---
+
+    function setupConsultationPage() {
+        // Load the list of conversations
+        loadConsultations();
+        
+        // Set up ONE persistent event listener for the reply form
+        const replyForm = document.getElementById('pharmacy-reply-form');
+        replyForm.addEventListener('submit', handlePharmacyReply);
+    }
+
+    async function handlePharmacyReply(e) {
+        e.preventDefault();
+        if (!currentChatId) {
+            alert('Please select a conversation first.');
+            return;
+        }
+
+        const replyText = document.getElementById('pharmacy-reply-text');
+        const text = replyText.value;
+        if (!text) return;
+
+        const sendRes = await fetchWithAuth(`/api/consultations/${currentChatId}/reply`, {
+            method: 'POST',
+            body: JSON.stringify({ text })
+        });
+
+        if (sendRes.success) {
+            replyText.value = '';
+            loadChatView(currentChatId); // Reload the chat to show the new message
+        } else {
+            alert('Failed to send reply. Your session might have expired.');
+        }
+    }
+    
     async function loadConsultations() {
         const listEl = document.getElementById('consultation-list');
         const result = await fetchWithAuth('/api/consultations');
+
         if (result.success && result.data.length > 0) {
             listEl.innerHTML = result.data.map(con => `
-                <div class="list-item">
-                    <h4>New message from: ${con.patient.name}</h4>
-                    <p>Question: "${con.initialQuestion}"</p>
-                    <button class="btn-secondary">View & Reply</button>
+                <div class="list-item-clickable" data-id="${con._id}">
+                    <h4>${con.patient.name}</h4>
+                    <p><em>"${con.initialQuestion}"</em></p>
+                    <small>Status: ${con.status}</small>
                 </div>
             `).join('');
+
+            document.querySelectorAll('.list-item-clickable').forEach(item => {
+                item.addEventListener('click', () => {
+                    // Visually highlight the active chat
+                    document.querySelectorAll('.list-item-clickable').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    loadChatView(item.dataset.id);
+                });
+            });
         } else {
             listEl.innerHTML = '<p>You have no open consultations.</p>';
+        }
+    }
+
+    async function loadChatView(consultationId) {
+        // Set the global variable to the current chat ID
+        currentChatId = consultationId;
+
+        // Show the chat panel and hide the placeholder
+        document.getElementById('chat-panel-placeholder').style.display = 'none';
+        const chatView = document.getElementById('chat-view-pharmacy');
+        chatView.style.display = 'flex';
+
+        const chatMessages = document.getElementById('chat-messages-pharmacy');
+        const chatName = document.getElementById('chat-with-patient-name');
+        
+        chatMessages.innerHTML = '<p>Loading chat...</p>';
+
+        const res = await fetchWithAuth(`/api/consultations/${consultationId}`);
+        if (res.success) {
+            const consult = res.data;
+            chatName.textContent = `Chat with ${consult.patient.name}`;
+            
+            chatMessages.innerHTML = consult.messages.map(msg => `
+                <div class="chat-message ${msg.sender === 'pharmacy' ? 'user-message' : 'ai-message'}">
+                    ${msg.text}
+                </div>
+            `).join('');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+            chatMessages.innerHTML = '<p>Could not load chat history.</p>';
         }
     }
 

@@ -106,3 +106,77 @@ h2 {
     font-weight: 600;
     cursor: pointer;
 }
+
+/* ... (existing styles) ... */
+
+/* --- Consultation & Chat Styles --- */
+.list-item-app {
+    background-color: var(--app-surface-color);
+    border: 1px solid var(--app-border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+}
+.list-item-app:hover {
+    background-color: #f8f9fa;
+}
+.list-item-app h4 {
+    margin: 0 0 0.5rem 0;
+}
+.list-item-app p {
+    margin: 0;
+    color: var(--app-muted-text-color);
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.chat-display-app {
+    height: calc(100vh - 250px); /* Adjust height based on your layout */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--app-border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.chat-message-app {
+    padding: 0.6rem 0.9rem;
+    border-radius: 18px;
+    max-width: 80%;
+}
+
+.user-message-app {
+    background-color: var(--app-primary-color);
+    color: white;
+    align-self: flex-end;
+}
+
+.other-message-app {
+    background-color: #e9ecef;
+    color: var(--app-text-color);
+    align-self: flex-start;
+}
+
+.chat-form-app {
+    display: flex;
+    gap: 0.5rem;
+}
+.chat-form-app input {
+    flex-grow: 1;
+}

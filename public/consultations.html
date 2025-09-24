@@ -9,14 +9,29 @@
 <body>
     <div id="nav-placeholder"></div>
 
-    <main class="container">
-        <div class="page-header">
-            <h2>Patient Consultations</h2>
-            <p>Here are your open consultation requests.</p>
+    <main class="container chat-container">
+        <div id="consultation-list-panel">
+            <h2>Patient Conversations</h2>
+            <div id="consultation-list">
+                <p>Loading open consultations...</p>
+            </div>
         </div>
-        
-        <div id="consultation-list">
-            <p>Loading open consultations...</p>
+
+        <div id="chat-panel">
+            <div id="chat-panel-placeholder">
+                <p>Select a conversation to start chatting.</p>
+            </div>
+            <div id="chat-view-pharmacy" style="display: none;">
+                <div class="chat-header">
+                    <h3 id="chat-with-patient-name"></h3>
+                </div>
+                <div id="chat-messages-pharmacy" class="chat-display">
+                    </div>
+                <form id="pharmacy-reply-form" class="chat-form">
+                    <input type="text" id="pharmacy-reply-text" placeholder="Type your reply..." required>
+                    <button type="submit" class="btn">Send</button>
+                </form>
+            </div>
         </div>
     </main>
 

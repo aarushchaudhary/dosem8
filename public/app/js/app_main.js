@@ -4,18 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPage = window.location.pathname;
 
     // --- Page Initializer ---
-    // This is the main entry point. It decides what to do based on the current page.
     const initializePage = async () => {
-        // Define which pages are public (don't require a login token)
         const publicPages = ['/patient-login.html', '/patient-register.html'];
-
-        // If we are on a protected page and there's no token, redirect to the login page.
         if (!token && !publicPages.includes(currentPage)) {
             window.location.href = '/patient-login.html';
             return;
         }
 
-        // Use a router to handle different pages
         switch (currentPage) {
             case '/patient-login.html':
                 document.getElementById('patient-login-form').addEventListener('submit', handlePatientLogin);
@@ -24,14 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('patient-register-form').addEventListener('submit', handlePatientRegister);
                 break;
             case '/app/index.html':
-                // This is the main Single-Page Application
                 initializeApp();
                 break;
         }
     };
 
-
-    // --- Patient Authentication Handlers (for patient-login.html and patient-register.html) ---
+    // --- Patient Authentication Handlers ---
     async function handlePatientRegister(e) {
         e.preventDefault();
         const registerForm = document.getElementById('patient-register-form');
@@ -71,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.success) {
                 localStorage.setItem('token', result.token);
-                window.location.href = '/app/index.html'; // Redirect to the main app
+                window.location.href = '/app/index.html';
             } else {
                 alert('Error: ' + result.message);
             }
@@ -80,8 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
-    // --- Main App Logic (for when the user is inside /app/index.html) ---
+    // --- Main App Logic ---
     let isPremiumUser = false;
 
     const initializeApp = async () => {
@@ -91,11 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         router();
         window.addEventListener('hashchange', router);
-        attachLogoutHandler(); // Attach the logout handler
+        attachLogoutHandler();
     };
 
     const router = async () => {
-        const path = window.location.hash || '#home';
+        const path = window.location.hash.split('?')[0] || '#home';
         const route = routes[path];
         if (route) {
             if (route.premium && !isPremiumUser) {
@@ -174,32 +166,103 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderConsultPage = async () => {
-        const consultForm = document.getElementById('consult-form');
-        const consultTitle = document.getElementById('consult-title');
-
-        if(isPremiumUser) {
-            consultTitle.textContent = "Ask AI Enhanced";
+        const pharmacySelect = document.getElementById('pharmacy-select');
+        const pharmacyRes = await fetchWithAuth('/api/pharmacies');
+        if (pharmacyRes.success) {
+            pharmacySelect.innerHTML += pharmacyRes.data.map(p => `<option value="${p._id}">${p.pharmacyName}</option>`).join('');
         }
 
-        consultForm.addEventListener('submit', async (e) => {
+        const newConsultForm = document.getElementById('new-consult-form');
+        newConsultForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const questionInput = document.getElementById('question');
-            const question = questionInput.value;
-            if (!question) return;
+            const formData = new FormData(newConsultForm);
+            const data = Object.fromEntries(formData.entries());
 
-            const endpoint = isPremiumUser ? '/api/ai/ask-enhanced' : '/api/ai/ask';
-
-            const result = await fetchWithAuth(endpoint, {
+            const result = await fetchWithAuth('/api/consultations/patient', {
                 method: 'POST',
-                body: JSON.stringify({ question })
+                body: JSON.stringify(data)
             });
 
-            const responseEl = document.getElementById('ai-response');
             if (result.success) {
-                responseEl.innerHTML = `<p>${result.answer}</p>`;
+                window.location.hash = `#chat?id=${result.data._id}`;
             } else {
-                responseEl.innerHTML = `<p>Error: ${result.message}</p>`;
+                alert('Error starting consultation: ' + result.message);
             }
+        });
+
+        const consultationList = document.getElementById('consultation-list');
+        const consultRes = await fetchWithAuth('/api/consultations/patient');
+        if (consultRes.success && consultRes.data.length > 0) {
+            consultationList.innerHTML = consultRes.data.map(con => `
+                <div class="list-item-app" data-id="${con._id}">
+                    <h4>Chat with ${con.pharmacy.pharmacyName}</h4>
+                    <p><em>"${con.initialQuestion}"</em></p>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.list-item-app').forEach(item => {
+                item.addEventListener('click', () => {
+                    window.location.hash = `#chat?id=${item.dataset.id}`;
+                });
+            });
+        } else {
+            consultationList.innerHTML = '<p>You have no active conversations.</p>';
+        }
+    };
+
+    const renderChatPage = async () => {
+        const hash = window.location.hash;
+        const urlParams = new URLSearchParams(hash.split('?')[1]);
+        const consultationId = urlParams.get('id');
+
+        if (!consultationId) {
+            window.location.hash = '#consult';
+            return;
+        }
+
+        const chatMessages = document.getElementById('chat-messages');
+        const chatWithName = document.getElementById('chat-with-name');
+        const replyForm = document.getElementById('chat-reply-form');
+        
+        const loadMessages = async () => {
+            const res = await fetchWithAuth(`/api/consultations/${consultationId}`);
+            if (res.success) {
+                const consult = res.data;
+                chatWithName.textContent = `Chat with ${consult.pharmacy.pharmacyName}`;
+                chatMessages.innerHTML = consult.messages.map(msg => `
+                    <div class="chat-message-app ${msg.sender === 'patient' ? 'user-message-app' : 'other-message-app'}">
+                        ${msg.text}
+                    </div>
+                `).join('');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else {
+                chatMessages.innerHTML = '<p>Could not load chat.</p>';
+            }
+        };
+
+        await loadMessages();
+
+        replyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const replyText = document.getElementById('reply-text');
+            const text = replyText.value;
+            if (!text) return;
+
+            const result = await fetchWithAuth(`/api/consultations/${consultationId}/reply`, {
+                method: 'POST',
+                body: JSON.stringify({ text })
+            });
+
+            if (result.success) {
+                replyText.value = '';
+                await loadMessages();
+            } else {
+                alert('Failed to send message.');
+            }
+        });
+
+        document.getElementById('back-to-consult-list').addEventListener('click', () => {
+            window.location.hash = '#consult';
         });
     };
 
@@ -263,6 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '#home': { template: '/app/partials/home.html', init: renderHomePage },
         '#reminders': { template: '/app/partials/reminders.html', init: renderRemindersPage },
         '#consult': { template: '/app/partials/consult.html', init: renderConsultPage },
+        '#chat': { template: '/app/partials/chat_view.html', init: renderChatPage },
         '#tips': { template: '/app/partials/health_tips.html', init: renderHealthTipsPage },
         '#ask_ai': { template: '/app/partials/ask_ai.html', init: renderAskAIPage },
         '#reports': { template: '/app/partials/reports.html', init: renderHealthReportsPage, premium: true }

@@ -1,7 +1,7 @@
 /* public/css/style.css */
-/* Updated to match the patient app's aesthetic with a red theme */
+/* Updated to match the patient app's aesthetic with a blue theme */
 :root {
-    --portal-primary-color: #dc3545; /* Changed from #007bff to a red color */
+    --portal-primary-color: #007bff; /* Blue theme for pharmacy portal */
     --portal-background-color: #f4f7f6;
     --portal-surface-color: #ffffff;
     --portal-text-color: #333;

@@ -50,7 +50,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Helper Functions ---
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
     async function fetchWithAuth(url, options = {}) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            handleLogout();
+            return { success: false, message: 'No authentication token found. Please log in again.' };
+        }
+
         const defaultOptions = {
             headers: {
                 'Content-Type': 'application/json',
@@ -62,12 +79,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             const response = await fetch(url, mergedOptions);
+            const result = await response.json();
+            
             if (response.status === 401) {
                 // If token is invalid or expired, force logout
+                console.log('Authentication failed:', result.message);
                 handleLogout();
-                return { success: false, message: 'Session expired.' };
+                return { success: false, message: result.message || 'Session expired. Please log in again.' };
             }
-            return await response.json();
+            
+            // Return the actual server response (success or error)
+            return result;
         } catch (error) {
             console.error("Fetch Error:", error);
             return { success: false, message: 'Network error or server is down.' };
@@ -259,19 +281,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const replyText = document.getElementById('pharmacy-reply-text');
-        const text = replyText.value;
-        if (!text) return;
+        const text = replyText.value.trim();
+        if (!text) {
+            alert('Please enter a message before sending.');
+            return;
+        }
+
+        // Show loading state
+        const sendButton = e.target.querySelector('button[type="submit"]');
+        const originalButtonText = sendButton.textContent;
+        sendButton.textContent = 'Sending...';
+        sendButton.disabled = true;
 
         const sendRes = await fetchWithAuth(`/api/consultations/${currentChatId}/reply`, {
             method: 'POST',
             body: JSON.stringify({ text })
         });
 
+        // Reset button state
+        sendButton.textContent = originalButtonText;
+        sendButton.disabled = false;
+
         if (sendRes.success) {
             replyText.value = '';
-            loadChatView(currentChatId); // Reload the chat to show the new message
+            
+            // Add the message immediately to the chat without reloading
+            const chatMessages = document.getElementById('chat-messages-pharmacy');
+            const newMessageDiv = document.createElement('div');
+            newMessageDiv.className = 'chat-message user-message';
+            newMessageDiv.innerHTML = escapeHtml(text);
+            chatMessages.appendChild(newMessageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Update the conversation list to show it's active
+            updateConversationStatus(currentChatId, 'in_progress');
+            
         } else {
-            alert('Failed to send reply. Your session might have expired.');
+            // Provide more specific error message based on the server response
+            const errorMessage = sendRes.message || 'Failed to send reply. Please try again.';
+            alert(`Error: ${errorMessage}`);
+            
+            // If it's an authentication error, the fetchWithAuth function will handle the redirect
+            // but we should also check if the token still exists
+            if (!localStorage.getItem('token')) {
+                alert('Your session has expired. Please log in again.');
+                window.location.href = '/login.html';
+            }
         }
     }
     
@@ -322,12 +377,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             chatMessages.innerHTML = consult.messages.map(msg => `
                 <div class="chat-message ${msg.sender === 'pharmacy' ? 'user-message' : 'ai-message'}">
-                    ${msg.text}
+                    ${escapeHtml(msg.text)}
                 </div>
             `).join('');
             chatMessages.scrollTop = chatMessages.scrollHeight;
         } else {
             chatMessages.innerHTML = '<p>Could not load chat history.</p>';
+        }
+    }
+
+    function updateConversationStatus(consultationId, status) {
+        const conversationItem = document.querySelector(`[data-id="${consultationId}"]`);
+        if (conversationItem) {
+            const statusElement = conversationItem.querySelector('small');
+            if (statusElement) {
+                statusElement.textContent = `Status: ${status}`;
+            }
         }
     }
 

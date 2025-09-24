@@ -85,15 +85,17 @@ exports.createConsultation = async (req, res) => {
 // @access  Private (Patient or Pharmacy)
 exports.replyToConsultation = async (req, res) => {
     try {
-        const consultation = await Consultation.findById(req.params.id);
+        const consultation = await Consultation.findById(req.params.id)
+            .populate('pharmacy', 'pharmacyName')
+            .populate('patient', 'name');
 
         if (!consultation) {
             return res.status(404).json({ success: false, message: 'Consultation not found' });
         }
 
         // Check if the logged-in user is the patient or the pharmacy in this consultation
-        const isPharmacy = consultation.pharmacy.toString() === req.user.id;
-        const isPatient = consultation.patient.toString() === req.user.id;
+        const isPharmacy = consultation.pharmacy._id.toString() === req.user.id;
+        const isPatient = consultation.patient._id.toString() === req.user.id;
 
         if (!isPharmacy && !isPatient) {
             return res.status(401).json({ success: false, message: 'Not authorized to reply to this consultation' });
@@ -101,9 +103,14 @@ exports.replyToConsultation = async (req, res) => {
 
         const senderType = isPharmacy ? 'pharmacy' : 'patient';
 
+        // Validate that text is provided
+        if (!req.body.text || req.body.text.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Message text is required' });
+        }
+
         const newMessage = {
             sender: senderType,
-            text: req.body.text
+            text: req.body.text.trim()
         };
 
         consultation.messages.push(newMessage);
@@ -112,19 +119,27 @@ exports.replyToConsultation = async (req, res) => {
 
         // If the pharmacy replied, create a notification for the patient
         if (senderType === 'pharmacy') {
-            await Notification.create({
-                // This is a patient notification, but it's linked to the pharmacy account in the DB
-                // We will need a separate notification schema for patients if we want to separate them fully
-                // For now, let's keep it simple and create a notification for the patient user
-                user: consultation.patient, // The user receiving the notification
-                message: `You have a new message from ${consultation.pharmacy.pharmacyName}`,
-                type: 'consultation',
-                link: `#/chat?id=${consultation._id}`
-            });
+            try {
+                await Notification.create({
+                    user: consultation.patient._id, // The user receiving the notification
+                    message: `You have a new message from ${consultation.pharmacy.pharmacyName}`,
+                    type: 'consultation',
+                    link: `#/chat?id=${consultation._id}`
+                });
+            } catch (notificationError) {
+                console.error('Error creating notification:', notificationError);
+                // Don't fail the entire operation if notification creation fails
+            }
         }
 
-        res.status(200).json({ success: true, data: consultation });
+        // Return the updated consultation with populated fields
+        const updatedConsultation = await Consultation.findById(consultation._id)
+            .populate('pharmacy', 'pharmacyName')
+            .populate('patient', 'name');
+
+        res.status(200).json({ success: true, data: updatedConsultation });
     } catch (error) {
+        console.error('Error in replyToConsultation:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

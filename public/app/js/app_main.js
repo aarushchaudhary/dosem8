@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 chatWithName.textContent = `Chat with ${consult.pharmacy.pharmacyName}`;
                 chatMessages.innerHTML = consult.messages.map(msg => `
                     <div class="chat-message-app ${msg.sender === 'patient' ? 'user-message-app' : 'other-message-app'}">
-                        ${msg.text}
+                        ${escapeHtml(msg.text)}
                     </div>
                 `).join('');
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -468,19 +468,39 @@ document.addEventListener('DOMContentLoaded', () => {
         replyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const replyText = document.getElementById('reply-text');
-            const text = replyText.value;
-            if (!text) return;
+            const text = replyText.value.trim();
+            if (!text) {
+                alert('Please enter a message before sending.');
+                return;
+            }
+
+            // Show loading state
+            const sendButton = e.target.querySelector('button[type="submit"]');
+            const originalButtonText = sendButton.textContent;
+            sendButton.textContent = 'Sending...';
+            sendButton.disabled = true;
 
             const result = await fetchWithAuth(`/api/consultations/${consultationId}/reply`, {
                 method: 'POST',
                 body: JSON.stringify({ text })
             });
 
+            // Reset button state
+            sendButton.textContent = originalButtonText;
+            sendButton.disabled = false;
+
             if (result.success) {
                 replyText.value = '';
-                await loadMessages();
+                
+                // Add the message immediately to the chat without reloading
+                const newMessageDiv = document.createElement('div');
+                newMessageDiv.className = 'chat-message-app user-message-app';
+                newMessageDiv.innerHTML = escapeHtml(text);
+                chatMessages.appendChild(newMessageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             } else {
-                alert('Failed to send message.');
+                const errorMessage = result.message || 'Failed to send message. Please try again.';
+                alert(`Error: ${errorMessage}`);
             }
         });
 
@@ -556,7 +576,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Helper Functions ---
+    const escapeHtml = (text) => {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    };
+
     const fetchWithAuth = async (url, options = {}) => {
+        if (!token) {
+            handleLogout();
+            return { success: false, message: 'No authentication token found. Please log in again.' };
+        }
+
         const defaultOptions = {
             headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
         };
@@ -565,10 +601,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(url, mergedOptions);
-            return await response.json();
+            const result = await response.json();
+            
+            if (response.status === 401) {
+                console.log('Patient authentication failed:', result.message);
+                handleLogout();
+                return { success: false, message: result.message || 'Session expired. Please log in again.' };
+            }
+            
+            return result;
         } catch (error) {
             console.error('API Fetch Error:', error);
-            return { success: false, message: 'Fetch error' };
+            return { success: false, message: 'Network error or server is down.' };
         }
     };
 

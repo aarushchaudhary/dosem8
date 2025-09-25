@@ -4,7 +4,9 @@ const router = express.Router();
 const { 
     getAdvertisements, 
     createAdvertisement,
-    getActiveAdvertisements
+    getActiveAdvertisements,
+    processAdPayment,
+    deleteAdvertisement // Import the new function
 } = require('../controllers/advertisementController');
 const auth = require('../middleware/authMiddleware');
 
@@ -17,5 +19,12 @@ router.use(auth);
 router.route('/')
     .get(getAdvertisements)
     .post(createAdvertisement);
+
+router.route('/:id/pay')
+    .post(processAdPayment);
+
+// Add the new DELETE route
+router.route('/:id')
+    .delete(deleteAdvertisement);
 
 module.exports = router;

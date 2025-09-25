@@ -6,24 +6,85 @@ const Advertisement = require('../models/Advertisement');
 // @access  Private
 exports.getAdvertisements = async (req, res) => {
     try {
-        const advertisements = await Advertisement.find({ pharmacy: req.user.id });
+        const advertisements = await Advertisement.find({ pharmacy: req.user.id }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: advertisements });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
 
-// @desc    Create a new advertisement
+// @desc    Create a new advertisement (pending payment)
 // @route   POST /api/advertisements
 // @access  Private
 exports.createAdvertisement = async (req, res) => {
     try {
-        // Associate the advertisement with the logged-in pharmacy
-        req.body.pharmacy = req.user.id;
+        const { campaignTitle, content, amount } = req.body;
         
-        const advertisement = await Advertisement.create(req.body);
+        const advertisement = await Advertisement.create({
+            campaignTitle,
+            content,
+            pharmacy: req.user.id,
+            status: 'pending_payment',
+            paymentDetails: {
+                amount,
+                status: 'unpaid'
+            }
+        });
         res.status(201).json({ success: true, data: advertisement });
     } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    "Process" a dummy payment and activate an ad
+// @route   POST /api/advertisements/:id/pay
+// @access  Private
+exports.processAdPayment = async (req, res) => {
+    try {
+        const advertisement = await Advertisement.findById(req.params.id);
+
+        if (!advertisement) {
+            return res.status(404).json({ success: false, message: 'Advertisement not found' });
+        }
+
+        if (advertisement.pharmacy.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, message: 'Not authorized' });
+        }
+
+        advertisement.status = 'active';
+        advertisement.paymentDetails.status = 'paid';
+        advertisement.paymentDetails.transactionId = `dummy_${new Date().getTime()}`;
+        advertisement.startDate = new Date();
+
+        await advertisement.save();
+
+        res.status(200).json({ success: true, data: advertisement });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
+// @desc    Delete an advertisement
+// @route   DELETE /api/advertisements/:id
+// @access  Private
+exports.deleteAdvertisement = async (req, res) => {
+    try {
+        const advertisement = await Advertisement.findById(req.params.id);
+
+        if (!advertisement) {
+            return res.status(404).json({ success: false, message: 'Advertisement not found' });
+        }
+
+        if (advertisement.pharmacy.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, message: 'Not authorized to delete this ad' });
+        }
+
+        await advertisement.deleteOne();
+
+        res.status(200).json({ success: true, message: 'Advertisement removed' });
+    } catch (error) {
+        console.error('Error deleting advertisement:', error);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -34,7 +95,7 @@ exports.createAdvertisement = async (req, res) => {
 exports.getActiveAdvertisements = async (req, res) => {
     try {
         const advertisements = await Advertisement.find({ status: 'active' })
-            .populate('pharmacy', 'pharmacyName'); // Include pharmacy name
+            .populate('pharmacy', 'pharmacyName');
         res.status(200).json({ success: true, data: advertisements });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server Error' });

@@ -1,5 +1,6 @@
 // controllers/reportController.js
 const Report = require('../models/Report');
+const Notification = require('../models/Notification'); // Import the Notification model
 
 // @desc    Submit a new health report
 // @route   POST /api/reports
@@ -16,6 +17,15 @@ exports.submitHealthReport = async (req, res) => {
         };
 
         const report = await Report.create(reportData);
+
+        // --- NEW: Create a notification for the pharmacy ---
+        await Notification.create({
+            pharmacy: pharmacy,
+            message: `You have received a new health report from a patient.`,
+            type: 'report', // You may need to add 'report' to your Notification model enum
+            link: `/reports.html?report_id=${report._id}`
+        });
+        
         res.status(201).json({ success: true, data: report });
 
     } catch (error) {

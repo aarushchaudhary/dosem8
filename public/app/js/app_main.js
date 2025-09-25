@@ -193,6 +193,50 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        // --- Render Nearby Pharmacies Map & List ---
+        const listEl = document.getElementById('dashboard-nearby-pharmacies');
+        const mapContainer = document.getElementById('map-container');
+        
+        // 1. Ask for user's location
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject);
+            });
+            const { latitude, longitude } = position.coords;
+
+            // 2. Fetch pharmacies using the location
+            const nearbyResult = await fetchWithAuth(`/api/pharmacies/nearby?lat=${latitude}&lon=${longitude}`);
+
+            if (nearbyResult.success && nearbyResult.data.places && nearbyResult.data.places.length > 0) {
+                const firstPharmacy = nearbyResult.data.places[0];
+                
+                if (firstPharmacy.map_url) {
+                    const mapUrl = firstPharmacy.map_url.replace('YOUR_API_KEY', '');
+                    mapContainer.innerHTML = `<iframe width="100%" height="100%" style="border:0;" loading="lazy" allowfullscreen src="${mapUrl}"></iframe>`;
+                } else {
+                    mapContainer.innerHTML = '<p>Map not available.</p>';
+                }
+
+                listEl.innerHTML = nearbyResult.data.places.map(pharmacy => `
+                    <div class="summary-card">
+                        <h4>${escapeHtml(pharmacy.name)}</h4>
+                        <p>${escapeHtml(pharmacy.address)}</p>
+                        <p><strong>Distance:</strong> ${pharmacy.distance}</p>
+                    </div>
+                `).join('');
+
+            } else {
+                mapContainer.innerHTML = '<p>No pharmacies found nearby.</p>';
+                listEl.innerHTML = '<p>We couldn\'t find any pharmacies in your immediate area.</p>';
+            }
+
+        } catch (error) {
+            // Handle case where user denies location permission or an error occurs
+            console.error("Location Error:", error);
+            mapContainer.innerHTML = '<p class="location-prompt">Please enable location access to find nearby pharmacies.</p>';
+            listEl.innerHTML = ''; // Clear the list
+        }
+
         // --- 2. Render Medicine Reminders ---
         const remindersContainer = document.getElementById('dashboard-reminders');
         const medRes = await fetchWithAuth('/api/medications');

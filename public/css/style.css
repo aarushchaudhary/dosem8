@@ -751,3 +751,88 @@ h1, h2, h3 {
         display: block;
     }
 }
+/* ... (existing styles) ... */
+
+/* --- Mobile Responsiveness for Reports Page --- */
+@media (max-width: 900px) {
+    /* ... (existing media query) ... */
+}
+
+/* --- NEW: Report Detail View Enhancements --- */
+
+/* Grid for patient vitals for better alignment */
+.report-vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem 1.5rem; /* Row and column gap */
+    margin-bottom: 1.5rem;
+}
+
+.report-vitals-grid p {
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--portal-border-color);
+    padding-bottom: 0.5rem;
+}
+
+.report-vitals-grid span {
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Styling for the patient's problem description */
+.report-problem-section {
+    margin-bottom: 1.5rem;
+}
+
+.report-problem-section p strong {
+    color: var(--portal-primary-color);
+}
+
+.report-problem-section blockquote {
+    margin: 0.5rem 0 0 0;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-left: 4px solid var(--portal-primary-color);
+    font-style: italic;
+    color: var(--portal-text-color);
+}
+
+/* Spacing for the report generation form */
+#generate-report-form {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--portal-border-color);
+    padding-top: 1.5rem;
+}
+
+/* ... (existing styles) ... */
+
+/* --- NEW: Advertisement Delete Button --- */
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ad-info {
+    flex-grow: 1;
+}
+
+.btn-delete-ad {
+    background-color: #dc3545; /* Red for a destructive action */
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0; /* Prevent the button from shrinking on smaller screens */
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-delete-ad:hover {
+    background-color: #c82333; /* Darker red on hover */
+}

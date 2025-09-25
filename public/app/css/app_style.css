@@ -479,3 +479,28 @@ h2 {
     border-radius: 8px;
     border: 1px solid var(--app-border-color);
 }
+
+/* ... (existing styles) ... */
+
+/* --- Find Nearby Pharmacy Page --- */
+#map-container {
+    height: 300px;
+    width: 100%;
+    background-color: #e9ecef;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Ensures the iframe corners are rounded */
+}
+
+#map-placeholder {
+    color: var(--app-muted-text-color);
+}
+
+#map-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}

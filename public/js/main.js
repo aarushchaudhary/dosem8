@@ -341,17 +341,21 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const { height, weight, age, bloodPressure, pulse, bloodSugar } = report.medicalInfo;
 
+            // Updated HTML structure for better styling
             infoEl.innerHTML = `
-                <p><strong>Patient Email:</strong> ${report.user.email}</p>
-                <p><strong>Age:</strong> ${age}</p>
-                <p><strong>Height:</strong> ${escapeHtml(height)}</p>
-                <p><strong>Weight:</strong> ${escapeHtml(weight)}</p>
-                <p><strong>Blood Pressure:</strong> ${escapeHtml(bloodPressure) || 'N/A'}</p>
-                <p><strong>Pulse:</strong> ${escapeHtml(pulse) || 'N/A'}</p>
-                <p><strong>Blood Sugar:</strong> ${escapeHtml(bloodSugar) || 'N/A'}</p>
-                <hr>
-                <p><strong>Patient's Problem Description:</strong></p>
-                <p>${escapeHtml(report.problemDescription)}</p>
+                <div class="report-vitals-grid">
+                    <p><strong>Patient Email:</strong> <span>${report.user.email}</span></p>
+                    <p><strong>Age:</strong> <span>${age}</span></p>
+                    <p><strong>Height:</strong> <span>${escapeHtml(height)}</span></p>
+                    <p><strong>Weight:</strong> <span>${escapeHtml(weight)}</span></p>
+                    <p><strong>Blood Pressure:</strong> <span>${escapeHtml(bloodPressure) || 'N/A'}</span></p>
+                    <p><strong>Pulse:</strong> <span>${escapeHtml(pulse) || 'N/A'}</span></p>
+                    <p><strong>Blood Sugar:</strong> <span>${escapeHtml(bloodSugar) || 'N/A'}</span></p>
+                </div>
+                <div class="report-problem-section">
+                    <p><strong>Patient's Problem Description:</strong></p>
+                    <blockquote>${escapeHtml(report.problemDescription)}</blockquote>
+                </div>
             `;
             
             // Clear or fill the text area
@@ -468,19 +472,87 @@ document.addEventListener('DOMContentLoaded', () => {
         if (result.success && result.data.length > 0) {
             listEl.innerHTML = result.data.map(ad => `
                 <div class="list-item">
-                    <h4>${ad.campaignTitle}</h4>
-                    <p>Status: <strong>${ad.status}</strong> | Clicks: ${ad.performance.clicks || 0}</p>
+                    <div class="ad-info">
+                        <h4>${ad.campaignTitle}</h4>
+                        <p>Status: <strong>${ad.status}</strong> | Clicks: ${ad.performance.clicks || 0}</p>
+                    </div>
+                    <button class="btn-delete-ad" data-id="${ad._id}">Delete</button>
                 </div>
             `).join('');
+
+            // Add event listeners to the new delete buttons
+            document.querySelectorAll('.btn-delete-ad').forEach(button => {
+                button.addEventListener('click', handleDeleteAd);
+            });
         } else {
             listEl.innerHTML = '<p>You have not created any campaigns yet.</p>';
         }
     }
     
+    async function handleDeleteAd(e) {
+        const adId = e.target.dataset.id;
+        if (confirm('Are you sure you want to delete this advertisement campaign? This action cannot be undone.')) {
+            const result = await fetchWithAuth(`/api/advertisements/${adId}`, {
+                method: 'DELETE'
+            });
+
+            if (result.success) {
+                loadAdvertisements(); // Refresh the list
+            } else {
+                alert('Error deleting advertisement: ' + result.message);
+            }
+        }
+    }
+    
     function setupAdForm() {
-        document.getElementById('create-ad-form').addEventListener('submit', async (e) => {
+        const createAdForm = document.getElementById('create-ad-form');
+        const dummyPaymentForm = document.getElementById('dummy-payment-form');
+        const adCreationSection = document.getElementById('ad-creation-section');
+        const paymentGatewaySection = document.getElementById('payment-gateway-section');
+        const adIdInput = document.getElementById('ad-id-for-payment');
+
+        // Step 1: Create the ad
+        createAdForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('Ad creation and payment gateway integration would happen here!');
+            const formData = new FormData(createAdForm);
+            const data = Object.fromEntries(formData.entries());
+
+            const result = await fetchWithAuth('/api/advertisements', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+
+            if (result.success) {
+                // Hide creation form, show payment form
+                adCreationSection.style.display = 'none';
+                paymentGatewaySection.style.display = 'block';
+                // Store the new ad's ID for the payment step
+                adIdInput.value = result.data._id;
+            } else {
+                alert('Error creating campaign: ' + result.message);
+            }
+        });
+
+        // Step 2: "Pay" for the ad
+        dummyPaymentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const adId = adIdInput.value;
+
+            const result = await fetchWithAuth(`/api/advertisements/${adId}/pay`, {
+                method: 'POST'
+            });
+
+            if (result.success) {
+                alert('Payment successful! Your ad is now active.');
+                // Hide payment form, show creation form again
+                paymentGatewaySection.style.display = 'none';
+                adCreationSection.style.display = 'block';
+                createAdForm.reset();
+                // Refresh the list of ads
+                loadAdvertisements();
+            } else {
+                alert('Payment failed: ' + result.message);
+            }
         });
     }
 

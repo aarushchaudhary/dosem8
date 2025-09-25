@@ -1,17 +1,7 @@
+<a href="#profile" class="profile-btn profile-btn-top" aria-label="View Profile">Profile</a>
+
 <h2>Dashboard</h2>
 <div id="greeting-name">Loading user info...</div>
-
-<div class="dashboard-section">
-    <h3>Nearby Pharmacies</h3>
-    <div id="map-container">
-        <div id="map-placeholder">
-            <p>Loading map...</p>
-        </div>
-    </div>
-    <div id="dashboard-nearby-pharmacies">
-        <p>Searching for nearby pharmacies...</p>
-    </div>
-</div>
 
 <div class="dashboard-section">
     <h3>Today's Reminders</h3>
@@ -38,5 +28,19 @@
     <h3>From Our Partners</h3>
     <div id="dashboard-advertisements">
         <p>Loading offers...</p>
+    </div>
+</div>
+
+<div class="dashboard-section">
+    <h3>Nearby Pharmacies</h3>
+    <div id="map-container">
+        <div id="map-placeholder">
+             <div class="location-permission">
+                <p>Please allow location access to find nearby pharmacies.</p>
+                <button id="request-location-btn" class="btn-primary">Allow Access</button>
+            </div>
+        </div>
+    </div>
+    <div id="nearby-pharmacy-list">
     </div>
 </div>

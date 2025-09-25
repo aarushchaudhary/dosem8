@@ -21,7 +21,10 @@ const userSchema = new mongoose.Schema({
     },
     profileInfo: {
         dateOfBirth: { type: Date },
-        address: { type: String, trim: true }
+        height: { type: String, trim: true },
+        weight: { type: String, trim: true },
+        bloodGroup: { type: String, trim: true },
+        medicalHistory: { type: String, trim: true } // For past/present diseases
     },
     settings: {
         theme: {

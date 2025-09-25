@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 // @desc    Register a new patient
 // @route   POST /api/patient/register
 exports.register = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, height, weight, dateOfBirth, bloodGroup, medicalHistory } = req.body;
 
     // Basic validation
     if (!name || !email || !password) {
@@ -20,11 +20,18 @@ exports.register = async (req, res) => {
             return res.status(400).json({ success: false, message: 'A user with this email already exists' });
         }
 
-        // Create a new user instance
+        // Create a new user instance with all the details
         user = new User({
             name,
             email,
-            password
+            password,
+            profileInfo: {
+                dateOfBirth,
+                height,
+                weight,
+                bloodGroup,
+                medicalHistory
+            }
         });
 
         // Hash the password before saving

@@ -1,0 +1,43 @@
+<h2>Your Profile</h2>
+<p>Keep your personal and health information up to date.</p>
+
+<div class="summary-card">
+    <h3>Edit Your Details</h3>
+    <form id="profile-update-form" class="simple-form">
+        <label for="profile-name">Full Name *</label>
+        <input type="text" id="profile-name" name="name" required>
+
+        <label for="profile-email">Email (cannot be changed)</label>
+        <input type="email" id="profile-email" name="email" disabled>
+        
+        <hr>
+        
+        <label for="profile-height">Height</label>
+        <input type="text" id="profile-height" name="height">
+        
+        <label for="profile-weight">Weight</label>
+        <input type="text" id="profile-weight" name="weight">
+
+        <label for="profile-dob">Date of Birth</label>
+        <input type="date" id="profile-dob" name="dateOfBirth">
+        
+        <label for="profile-bloodGroup">Blood Group</label>
+        <input type="text" id="profile-bloodGroup" name="bloodGroup">
+        
+        <label for="profile-medicalHistory">Past/Present Diseases or Problems</label>
+        <textarea id="profile-medicalHistory" name="medicalHistory" rows="5"></textarea>
+
+        <button type="submit">Update Profile</button>
+    </form>
+</div>
+
+<div class="summary-card">
+    <h3>Account Actions</h3>
+    <div class="profile-actions">
+        <button id="logout-button" class="btn-logout-improved">
+            <span class="logout-icon">🚪</span>
+            Logout
+        </button>
+    </div>
+</div>
+

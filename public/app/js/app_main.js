@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- Render Nearby Pharmacies Map & List ---
-        const listEl = document.getElementById('dashboard-nearby-pharmacies');
+        const listEl = document.getElementById('nearby-pharmacy-list');
         const mapContainer = document.getElementById('map-container');
         
         // 1. Ask for user's location
@@ -685,6 +685,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const renderProfilePage = async () => {
+        const userRes = await fetchWithAuth('/api/user/profile');
+        if (userRes.success) {
+            const user = userRes.data;
+            
+            // Fill profile form with existing data
+            const form = document.getElementById('profile-update-form');
+            form.name.value = user.name;
+            form.email.value = user.email;
+            
+            // Fill profile info if available
+            if (user.profileInfo) {
+                if (user.profileInfo.dateOfBirth) {
+                    form.dateOfBirth.value = user.profileInfo.dateOfBirth.split('T')[0]; // Format date for input
+                }
+                if (user.profileInfo.height) form.height.value = user.profileInfo.height;
+                if (user.profileInfo.weight) form.weight.value = user.profileInfo.weight;
+                if (user.profileInfo.bloodGroup) form.bloodGroup.value = user.profileInfo.bloodGroup;
+                if (user.profileInfo.medicalHistory) form.medicalHistory.value = user.profileInfo.medicalHistory;
+            }
+        }
+
+        // Handle profile form submission
+        const profileForm = document.getElementById('profile-update-form');
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(profileForm);
+            const data = Object.fromEntries(formData.entries());
+
+            const result = await fetchWithAuth('/api/user/profile', {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+
+            if (result.success) {
+                alert('Profile updated successfully!');
+                renderProfilePage(); // Refresh the page
+            } else {
+                alert('Error updating profile: ' + result.message);
+            }
+        });
+
+        // Handle logout button
+        const logoutButton = document.getElementById('logout-button');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', handleLogout);
+        }
+    };
+
     // --- Routes Definition ---
     const routes = {
         '#home': { template: '/app/partials/home.html', init: renderHomePage },
@@ -693,7 +742,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '#chat': { template: '/app/partials/chat_view.html', init: renderChatPage },
         '#tips': { template: '/app/partials/health_tips.html', init: renderHealthTipsPage },
         '#ask_ai': { template: '/app/partials/ask_ai.html', init: renderAskAIPage },
-        '#reports': { template: '/app/partials/reports.html', init: renderHealthReportsPage, premium: true }
+        '#reports': { template: '/app/partials/reports.html', init: renderHealthReportsPage, premium: true },
+        '#profile': { template: '/app/partials/profile.html', init: renderProfilePage }
     };
 
     // --- Helper Functions ---

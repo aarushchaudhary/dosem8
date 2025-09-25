@@ -26,29 +26,25 @@ exports.getUserProfile = async (req, res) => {
 // @route   PUT /api/user/profile
 // @access  Private
 exports.updateUserProfile = async (req, res) => {
-    // Destructure fields that are safe to update from the request body
-    const { name, profileInfo, settings } = req.body;
-
-    const updatedFields = {
-        name,
-        profileInfo,
-        settings
-    };
+    // Destructure fields from the request body
+    const { name, profileInfo } = req.body;
 
     try {
-        // Find the user by ID and update their information
-        // { new: true } ensures the updated document is returned
-        const user = await User.findByIdAndUpdate(
-            req.user.id,
-            updatedFields,
-            { new: true, runValidators: true }
-        ).select('-password');
+        const user = await User.findById(req.user.id);
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        res.status(200).json({ success: true, data: user });
+        // Update fields if they were provided
+        if (name) user.name = name;
+        if (profileInfo) {
+            user.profileInfo = { ...user.profileInfo, ...profileInfo };
+        }
+
+        const updatedUser = await user.save();
+
+        res.status(200).json({ success: true, data: updatedUser });
 
     } catch (error) {
         console.error(error.message);

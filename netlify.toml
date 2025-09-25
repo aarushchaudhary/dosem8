@@ -1,0 +1,11 @@
+[build]
+  # Your frontend files are in the 'public' directory
+  publish = "public"
+  # The directory where we will create our serverless function
+  functions = "netlify/functions"
+
+[[redirects]]
+  # Redirect all API calls to our serverless function
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200

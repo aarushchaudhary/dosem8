@@ -21,6 +21,7 @@
     "express-session": "^1.18.2",
     "google-it": "^1.6.4",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.1"
+    "mongoose": "^8.18.1",
+    "serverless-http": "^4.0.0"
   }
 }

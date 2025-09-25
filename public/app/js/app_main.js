@@ -179,65 +179,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log('Patient dashboard data loaded:', { user: userRes.data, time, date });
             
-            // Enhanced greeting with user info, date and time
-            greetingEl.innerHTML = `
-                <div style="margin-bottom: 15px;">
-                    <h3>Welcome, ${userRes.data.name}!</h3>
-                    ${isPremiumUser ? '<span class="premium-badge">★ Premium</span>' : ''}
-                </div>
-                <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;">
-                    <p><strong>📅 Today's Date:</strong> ${date}</p>
-                    <p><strong>🕐 Current Time:</strong> ${time}</p>
-                    <p><strong>👤 Member Since:</strong> ${new Date(userRes.data.createdAt).toLocaleDateString()}</p>
-                </div>
-            `;
-        }
+        // Enhanced greeting with user info, date and time
+        greetingEl.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <h3>Welcome, ${userRes.data.name}!</h3>
+                ${isPremiumUser ? '<span class="premium-badge">★ Premium</span>' : ''}
+            </div>
+            <div style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9em;">
+                <p><strong>📅 Today's Date:</strong> ${date}</p>
+                <p><strong>🕐 Current Time:</strong> ${time}</p>
+                <p><strong>👤 Member Since:</strong> ${new Date(userRes.data.createdAt).toLocaleDateString()}</p>
+            </div>
+        `;
+    }
 
-        // --- Render Nearby Pharmacies Map & List ---
-        const listEl = document.getElementById('nearby-pharmacy-list');
-        const mapContainer = document.getElementById('map-container');
-        
-        // 1. Ask for user's location
-        try {
-            const position = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject);
-            });
-            const { latitude, longitude } = position.coords;
-
-            // 2. Fetch pharmacies using the location
-            const nearbyResult = await fetchWithAuth(`/api/pharmacies/nearby?lat=${latitude}&lon=${longitude}`);
-
-            if (nearbyResult.success && nearbyResult.data.places && nearbyResult.data.places.length > 0) {
-                const firstPharmacy = nearbyResult.data.places[0];
-                
-                if (firstPharmacy.map_url) {
-                    const mapUrl = firstPharmacy.map_url.replace('YOUR_API_KEY', '');
-                    mapContainer.innerHTML = `<iframe width="100%" height="100%" style="border:0;" loading="lazy" allowfullscreen src="${mapUrl}"></iframe>`;
-                } else {
-                    mapContainer.innerHTML = '<p>Map not available.</p>';
-                }
-
-                listEl.innerHTML = nearbyResult.data.places.map(pharmacy => `
-                    <div class="summary-card">
-                        <h4>${escapeHtml(pharmacy.name)}</h4>
-                        <p>${escapeHtml(pharmacy.address)}</p>
-                        <p><strong>Distance:</strong> ${pharmacy.distance}</p>
-                    </div>
-                `).join('');
-
-            } else {
-                mapContainer.innerHTML = '<p>No pharmacies found nearby.</p>';
-                listEl.innerHTML = '<p>We couldn\'t find any pharmacies in your immediate area.</p>';
-            }
-
-        } catch (error) {
-            // Handle case where user denies location permission or an error occurs
-            console.error("Location Error:", error);
-            mapContainer.innerHTML = '<p class="location-prompt">Please enable location access to find nearby pharmacies.</p>';
-            listEl.innerHTML = ''; // Clear the list
-        }
-
-        // --- 2. Render Medicine Reminders ---
+    // --- NEW: Render Embedded Google Map ---
+    const mapContainer = document.getElementById('map-container');
+    const listEl = document.getElementById('nearby-pharmacy-list');
+    
+    // This is the Google Maps embed code for "pharmacies in Secunderabad"
+    const mapEmbedUrl = "https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d60906.34219432599!2d78.48901265147482!3d17.44751799912053!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1spharmacies%20in%20Secunderabad!5e0!3m2!1sen!2sin!4v1727246413753!5m2!1sen!2sin";
+    
+    mapContainer.innerHTML = `<iframe src="${mapEmbedUrl}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+    
+    // We no longer need the separate list, as the map handles it.
+    listEl.innerHTML = '<p>Pharmacies are shown on the map above. You can scroll and zoom to explore.</p>';        // --- 2. Render Medicine Reminders ---
         const remindersContainer = document.getElementById('dashboard-reminders');
         const medRes = await fetchWithAuth('/api/medications');
         if (medRes.success && medRes.data.length > 0) {
@@ -282,22 +248,18 @@ document.addEventListener('DOMContentLoaded', () => {
             remindersContainer.innerHTML = '<p>You have no medications scheduled.</p>';
         }
 
-        // --- 3. Render Notifications ---
-        const notificationsContainer = document.getElementById('dashboard-notifications');
-        // This requires a new patient-specific notification endpoint, which we've planned for
-        // For now, we'll assume an endpoint /api/patient/notifications exists
-        const notifRes = { success: false, data: [] }; // Placeholder for actual API call
-        if (notifRes.success && notifRes.data.length > 0) {
-            notificationsContainer.innerHTML = notifRes.data.map(n => `
-                <div class="summary-card">
-                    <a href="${n.link}">${n.message}</a>
-                </div>
-            `).join('');
-        } else {
-            notificationsContainer.innerHTML = '<p>No new notifications.</p>';
-        }
-
-        // --- 4. Render New Health Tips ---
+    // --- 3. Render Notifications ---
+    const notificationsContainer = document.getElementById('dashboard-notifications');
+    const notifRes = { success: false, data: [] }; // Placeholder for actual API call
+    if (notifRes.success && notifRes.data.length > 0) {
+        notificationsContainer.innerHTML = notifRes.data.map(n => `
+            <div class="summary-card">
+                <a href="${n.link}">${n.message}</a>
+            </div>
+        `).join('');
+    } else {
+        notificationsContainer.innerHTML = '<p>No new notifications.</p>';
+    }        // --- 4. Render New Health Tips ---
         const tipsContainer = document.getElementById('dashboard-health-tips');
         const tipsRes = await fetchWithAuth('/api/health-tips?new=true');
         if (tipsRes.success && tipsRes.data.length > 0) {

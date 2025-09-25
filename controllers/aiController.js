@@ -1,7 +1,8 @@
 // controllers/aiController.js
-const Regulation = require('../models/Regulation');
-const Medication = require('../models/Medication');
 const { getAIResponse, getInteractionResponse } = require('../services/aiService');
+const { searchAndScrapeGovSites } = require('../services/webSearchService');
+const { fetchDrugInfo } = require('../services/cdscoService');
+const { fetchIpaPharmaData } = require('../services/ipaPharmaService');
 
 // @desc    Get a standard answer from the AI assistant
 // @route   POST /api/ai/ask
@@ -14,14 +15,31 @@ exports.askAI = async (req, res) => {
     }
 
     try {
-        const contextRegulations = await Regulation.find(
-            { $text: { $search: question } },
-            { score: { $meta: "textScore" } }
-        ).sort({ score: { $meta: "textScore" } }).limit(3);
+        // --- NEW: Layered Data Fetching ---
+        let context = '';
 
-        const context = contextRegulations.map(reg => `Title: ${reg.title}\nContent: ${reg.content}`).join('\n\n');
+        // 1. Primary Method: Dynamic Web Search
+        const webSearchResult = await searchAndScrapeGovSites(question);
 
-        // FIXED: Pass the raw question and context to the service
+        // Check if the web search returned substantial content
+        if (webSearchResult && !webSearchResult.includes('No relevant government web pages found')) {
+            context += webSearchResult;
+        } else {
+            // 2. Fallback Method: Use specific scrapers if web search is empty
+            console.log('Web search yielded no results. Falling back to specific scrapers.');
+            
+            const cdscoData = await fetchDrugInfo(question);
+            if (cdscoData) {
+                context += `--- CDSCO Information ---\n${cdscoData}\n\n`;
+            }
+
+            const ipaData = await fetchIpaPharmaData(question);
+            if (ipaData) {
+                context += `--- IPA Pharma Guidelines ---\n${ipaData}`;
+            }
+        }
+
+        // 3. Send the final context to the AI
         const answer = await getAIResponse(question, context);
 
         res.status(200).json({ success: true, answer: answer });

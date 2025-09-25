@@ -603,7 +603,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (result.success) {
-                responseEl.innerHTML = `<p>${result.answer}</p>`;
+                // --- MODIFIED PART ---
+                // 1. Create a new showdown converter
+                const converter = new showdown.Converter();
+                // 2. Convert the Markdown response to HTML
+                const html = converter.makeHtml(result.answer);
+                // 3. Set the innerHTML of the response element
+                responseEl.innerHTML = html;
             } else {
                 responseEl.innerHTML = `<p>Error: ${result.message}</p>`;
             }

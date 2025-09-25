@@ -15,9 +15,11 @@
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
+    "cheerio": "^1.0.0-rc.12",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
+    "google-it": "^1.6.4",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.1"
   }

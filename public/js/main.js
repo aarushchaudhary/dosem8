@@ -451,7 +451,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         if (result.success) {
-            resultCard.textContent = result.answer;
+            // --- MODIFIED PART ---
+            // 1. Create a new showdown converter
+            const converter = new showdown.Converter();
+            // 2. Convert the Markdown response to HTML
+            const html = converter.makeHtml(result.answer);
+            // 3. Set the innerHTML of the result card
+            resultCard.innerHTML = html;
         } else {
             resultCard.textContent = 'Sorry, there was an error checking for interactions.';
         }

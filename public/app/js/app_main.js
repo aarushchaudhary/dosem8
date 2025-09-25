@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const responseEl = document.getElementById('ai-response');
             const button = e.target.querySelector('button');
             const originalButtonText = button.textContent;
-            
+
             // Show loading state
             button.disabled = true;
             button.textContent = 'Checking...';
@@ -575,7 +575,97 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 responseEl.innerHTML = `<p>Error: ${result.message}</p>`;
             }
-            
+
+            // Restore button state
+            button.disabled = false;
+            button.textContent = originalButtonText;
+        });
+
+        // --- NEW OCR FORM HANDLER ---
+        const ocrForm = document.getElementById('ocr-form');
+        ocrForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const imageInput = document.getElementById('medicineImage');
+            const imageFile = imageInput.files[0];
+            if (!imageFile) {
+                alert('Please select an image to upload.');
+                return;
+            }
+
+            const responseEl = document.getElementById('ai-response');
+            const button = e.target.querySelector('button');
+            const originalButtonText = button.textContent;
+
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Scanning...';
+            responseEl.style.display = 'block';
+            responseEl.innerHTML = '<p>Uploading and analyzing image...</p>';
+
+            const formData = new FormData();
+            formData.append('medicineImage', imageFile);
+
+            const result = await fetchWithAuth('/api/ai/extract-from-image', {
+                method: 'POST',
+                body: formData
+                // Don't set Content-Type header for FormData - let browser handle it
+            });
+
+            if (result.success) {
+                const converter = new showdown.Converter();
+                const html = converter.makeHtml(result.answer);
+                responseEl.innerHTML = html;
+            } else {
+                responseEl.innerHTML = `<p>Error: ${result.message}</p>`;
+            }
+
+            // Restore button state
+            button.disabled = false;
+            button.textContent = originalButtonText;
+        });
+
+        // --- NEW FOOD INTERACTION FORM HANDLER ---
+        const foodInteractionForm = document.getElementById('food-interaction-form');
+        foodInteractionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const imageInput = document.getElementById('foodImage');
+            const drugInput = document.getElementById('drugName');
+            const imageFile = imageInput.files[0];
+            const drugName = drugInput.value;
+
+            if (!imageFile || !drugName) {
+                alert('Please select an image and enter a drug name.');
+                return;
+            }
+
+            const responseEl = document.getElementById('ai-response');
+            const button = e.target.querySelector('button');
+            const originalButtonText = button.textContent;
+
+            // Show loading state
+            button.disabled = true;
+            button.textContent = 'Analyzing...';
+            responseEl.style.display = 'block';
+            responseEl.innerHTML = '<p>Analyzing food label for interactions...</p>';
+
+            const formData = new FormData();
+            formData.append('foodImage', imageFile);
+            formData.append('drugName', drugName);
+
+            const result = await fetchWithAuth('/api/ai/check-food-interaction', {
+                method: 'POST',
+                body: formData
+                // Don't set Content-Type header for FormData - let browser handle it
+            });
+
+            if (result.success) {
+                const converter = new showdown.Converter();
+                const html = converter.makeHtml(result.answer);
+                responseEl.innerHTML = html;
+            } else {
+                responseEl.innerHTML = `<p>Error: ${result.message}</p>`;
+            }
+
             // Restore button state
             button.disabled = false;
             button.textContent = originalButtonText;
@@ -735,6 +825,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const defaultOptions = {
             headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
         };
+        
+        // Handle FormData requests differently
+        if (options.body instanceof FormData) {
+            defaultOptions.headers = { 'x-auth-token': token }; // Don't set Content-Type for FormData
+        }
+        
         const mergedOptions = { ...defaultOptions, ...options };
         mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
 

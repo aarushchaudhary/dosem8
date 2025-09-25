@@ -1,7 +1,7 @@
 // controllers/aiController.js
 const Regulation = require('../models/Regulation'); // Re-import the Regulation model
 const Medication = require('../models/Medication');
-const { generateAnswerWithTools, getInteractionResponse, getAIResponse } = require('../services/aiService');
+const { generateAnswerWithTools, getInteractionResponse, getAIResponse, getMedicineInfoFromImage, getFoodDrugInteractionFromImage } = require('../services/aiService');
 
 // @desc    Get a standard answer from the AI assistant
 // @route   POST /api/ai/ask
@@ -115,5 +115,45 @@ exports.askAIEnhanced = async (req, res) => {
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ success: false, message: 'Error getting response from AI service' });
+    }
+};
+
+// @desc    Extract medicine info from an image using OCR and AI
+// @route   POST /api/ai/extract-from-image
+// @access  Private
+exports.extractFromImage = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No image file uploaded' });
+    }
+
+    try {
+        const imageBuffer = req.file.buffer;
+        const answer = await getMedicineInfoFromImage(imageBuffer);
+        res.status(200).json({ success: true, answer: answer });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ success: false, message: 'Error processing image' });
+    }
+};
+
+// @desc    Check for interactions between a food item (from image) and a drug
+// @route   POST /api/ai/check-food-interaction
+// @access  Private
+exports.checkFoodInteraction = async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No image file uploaded' });
+    }
+    const { drugName } = req.body;
+    if (!drugName) {
+        return res.status(400).json({ success: false, message: 'Drug name is required' });
+    }
+
+    try {
+        const imageBuffer = req.file.buffer;
+        const answer = await getFoodDrugInteractionFromImage(imageBuffer, drugName);
+        res.status(200).json({ success: true, answer: answer });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ success: false, message: 'Error processing image for food interaction' });
     }
 };

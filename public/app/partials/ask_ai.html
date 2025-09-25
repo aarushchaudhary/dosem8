@@ -9,5 +9,24 @@
     </form>
 </div>
 
+<div class="summary-card">
+    <h3>Medicine Packet Scanner (OCR)</h3>
+    <p>Upload an image of a medicine packet to get details like name, use, and expiry date.</p>
+    <form id="ocr-form" class="simple-form">
+        <input type="file" id="medicineImage" name="medicineImage" accept="image/*" required>
+        <button type="submit">Scan Packet</button>
+    </form>
+</div>
+
+<div class="summary-card">
+    <h3>Food Label Scanner</h3>
+    <p>Upload an image of a packaged food label and enter a drug name to check for potential interactions.</p>
+    <form id="food-interaction-form" class="simple-form">
+        <input type="file" id="foodImage" name="foodImage" accept="image/*" required>
+        <input type="text" id="drugName" name="drugName" placeholder="Enter drug name..." required>
+        <button type="submit">Check Food Interaction</button>
+    </form>
+</div>
+
 <div id="ai-response" class="response-card" style="display: none;">
 </div>

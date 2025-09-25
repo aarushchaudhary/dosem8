@@ -141,8 +141,83 @@ async function getAIResponse(question, context) {
 }
 
 
+/**
+ * Gets medicine information from an image using the AI's multimodal capabilities.
+ * @param {Buffer} imageBuffer The image file buffer.
+ * @returns {Promise<string>} The AI-generated information about the medicine.
+ */
+async function getMedicineInfoFromImage(imageBuffer) {
+    try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+        const prompt = `
+            Analyze the provided image of a medicine packet and extract the following information:
+            - **Medicine Name:**
+            - **Primary Use:**
+            - **Expiry Date:**
+
+            If any of this information is not clearly visible, state that it is not available.
+        `;
+
+        const imagePart = {
+            inlineData: {
+                data: imageBuffer.toString("base64"),
+                mimeType: "image/jpeg", // Assuming jpeg, you might want to make this dynamic
+            },
+        };
+
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        const text = response.text();
+
+        return text;
+    } catch (error) {
+        console.error('Error contacting AI service for image analysis:', error);
+        throw new Error('Could not get a response from the AI service for image analysis.');
+    }
+}
+
+
+/**
+ * Analyzes a food label image and checks for interactions with a given drug.
+ * @param {Buffer} imageBuffer The image file buffer of the food label.
+ * @param {string} drugName The name of the drug to check for interactions.
+ * @returns {Promise<string>} The AI-generated interaction analysis.
+ */
+async function getFoodDrugInteractionFromImage(imageBuffer, drugName) {
+    try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+        const prompt = `
+            Analyze the provided image of a food product's nutrition label and ingredients list.
+            Based on the ingredients, check for any potential interactions with the drug: "${drugName}".
+            Provide a summary of any potential interactions, and if there are none, state that clearly.
+            Include a disclaimer that this is for informational purposes only and not medical advice.
+        `;
+
+        const imagePart = {
+            inlineData: {
+                data: imageBuffer.toString("base64"),
+                mimeType: "image/jpeg",
+            },
+        };
+
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        const text = response.text();
+
+        return text;
+    } catch (error) {
+        console.error('Error contacting AI service for food interaction analysis:', error);
+        throw new Error('Could not get a response from the AI service for food interaction analysis.');
+    }
+}
+
+
 module.exports = { 
     getAIResponse, 
     getInteractionResponse,
-    generateAnswerWithTools // <-- Export the new function
+    generateAnswerWithTools, // <-- Export the new function
+    getMedicineInfoFromImage, // <-- Export the new function
+    getFoodDrugInteractionFromImage // <-- Export the new function
 };
